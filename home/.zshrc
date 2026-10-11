@@ -159,6 +159,24 @@ kj() {
 }
 function request-godmode() { lumos request --app-like "Apollo - Godmode Access Request - Temporal" --for-me --length 12h --reason "$*" --wait; }
 
+# Build the latest okfs (github.com/jrnxf/okfs) and install it to ~/.cargo/bin.
+# Inside an okfs checkout it builds that checkout as it stands; anywhere else
+# it keeps its own clone and pulls main first. Temporary: okfs gets a pinned
+# package like leaf.nix once it has releases.
+build-okfs() {
+  local src
+  src="$(git rev-parse --show-toplevel 2>/dev/null)"
+  if ! grep -qs '^name = "okfs"$' "$src/Cargo.toml"; then
+    src="$HOME/.cache/okfs-build/okfs"
+    if [[ -d $src/.git ]]; then
+      git -C "$src" pull --ff-only || return
+    else
+      git clone git@github.com:jrnxf/okfs.git "$src" || return
+    fi
+  fi
+  (cd "$src" && nix --extra-experimental-features 'nix-command flakes' develop -c cargo install --path . --locked)
+}
+
 # homelab ssh picker wrapper (managed by ansible pre-migration)
 ssh() {
   if [[ "$1" == "homelab" ]]; then
