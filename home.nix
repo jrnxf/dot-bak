@@ -35,6 +35,12 @@ in
   # markdown renderer behind the Claude Code /mkd mod
   ++ [ (import ./leaf.nix { inherit pkgs; }) ];
   home.sessionVariables.EDITOR = "nvim";
+  # A chrome-devtools-axi bridge and its headless Chrome run until someone
+  # calls `chrome-devtools-axi stop`, and agents rarely do: finished workers
+  # left browsers holding gigabytes for most of a day. With this set, a bridge
+  # stops itself after 30 minutes without a command, and the next command
+  # starts a fresh one.
+  home.sessionVariables.CHROME_DEVTOOLS_AXI_IDLE_TIMEOUT_MS = "1800000";
 
   # Stable package paths for the editable shell configuration.
   home.file.".local/share/zsh-packages/zsh".source = pkgs.zsh;
