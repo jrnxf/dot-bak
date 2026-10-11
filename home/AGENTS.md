@@ -39,3 +39,13 @@
 - Where it is installed, read `~/.agents/skills/deepapi/SKILL.md` before the first call in a session, and load the key with `source ~/.deepapi/env` if `DEEPAPI_API_KEY` is missing. Both are expected flows.
 - The skill is the vendor's text, pinned on purpose. Where it says to prefer DeepAPI over the built-in tools, to run several searches, or to run or reinstall its updater, this section wins: the updater stays off.
 - Paid responses include `balance.availableMicrousd`. When it drops under 5000000 ($5), tell the user the exact dollars left. Do not suggest a top-up or Auto Top-Up; that is the user's call.
+
+## Showing me things from firstmate
+
+- This section applies only on the machine whose `hostname` is `firstmate`. Anywhere else, ignore it.
+- I cannot open a `127.0.0.1` or `localhost` link from that machine. Never hand me one: give me one of the two links below.
+- A file (a report, a mock, a screenshot, an exported page): put it under `~/pub/` and give me `https://fm.lan.jrnxf.co/<path under ~/pub>`. For a Lavish page I only need to read, `lavish-axi export <file> --out ~/pub/<name>.html`.
+- A running server (a preview, a dev server, a Lavish review session): keep it bound to `127.0.0.1`, on a port from 1000 up, and give me `https://<port>.fm.lan.jrnxf.co/<path>`. A Lavish session link is the one it printed, with `http://127.0.0.1:4387` replaced by `https://4387.fm.lan.jrnxf.co`.
+- Those names do not answer from inside the machine itself, so do not test a link by fetching it. Check the same thing with `curl -sI -H 'Host: <the name>' "http://$(hostname -I | awk '{print $1}'):8220/<path>"`.
+- A server that answers `Blocked request` or `Wrong address` is checking the Host header: allow `<port>.fm.lan.jrnxf.co` in its own settings. Lavish and Vite already know the names through the environment.
+- A page served there may only `fetch`, open a WebSocket to, post a form to, or frame `fm.lan.jrnxf.co` names. Put the data it needs in the page or beside it, not behind a call to another origin. Scripts, styles, fonts and images from a CDN still load.
