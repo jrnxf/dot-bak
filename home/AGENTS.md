@@ -44,7 +44,7 @@
 
 - This section applies only on the machine whose `hostname` is `firstmate`. Anywhere else, ignore it.
 - I cannot open a `127.0.0.1` or `localhost` link from that machine. Never hand me one: give me one of the two links below.
-- A file (a report, a mock, a screenshot, an exported page): put it under `~/pub/` and give me `https://fm.lan.jrnxf.co/<path under ~/pub>`. For a Lavish page I only need to read, `lavish-axi export <file> --out ~/pub/<name>.html`.
+- A file (a report, a mock, a screenshot, an exported page): put it under `~/pub/` and give me `https://fm.lan.jrnxf.co/<path under ~/pub>`. Lavish pages I only need to read are kept by project: `lavish-axi export <file> --out ~/pub/lavish/<project>/<name>.html`, where `<name>` drops the project prefix and a page about no single project goes under `firstmate`.
 - A running server (a preview, a dev server, a Lavish review session): keep it bound to `127.0.0.1`, on a port from 1000 up, and give me `https://<port>.fm.lan.jrnxf.co/<path>`. A Lavish session link is the one it printed, with `http://127.0.0.1:4387` replaced by `https://4387.fm.lan.jrnxf.co`.
 - Those names do not answer from inside the machine itself, so do not test a link by fetching it. Check the same thing with `curl -sI -H 'Host: <the name>' "http://$(hostname -I | awk '{print $1}'):8220/<path>"`.
 - A server that answers `Blocked request` or `Wrong address` is checking the Host header: allow `<port>.fm.lan.jrnxf.co` in its own settings. Lavish and Vite already know the names through the environment.
