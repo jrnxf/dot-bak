@@ -223,6 +223,7 @@
       "raycast"
       "rectangle"
       "slack"
+      "spokenly"
       "spotify"
       "topnotch"
       "visual-studio-code"
