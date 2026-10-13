@@ -58,6 +58,8 @@
       { name = "garden-io/garden"; trusted = true; }
       { name = "isacikgoz/taps"; trusted = true; }
       { name = "jason0x43/neovim-nightly"; trusted = true; }
+      # Repo is not named homebrew-thokr, so the clone address is required.
+      { name = "jrnxf/thokr"; clone_target = "https://github.com/jrnxf/thokr"; trusted = true; }
       { name = "libsql/sqld"; trusted = true; }
       { name = "oven-sh/bun"; trusted = true; }
       { name = "tilt-dev/tap"; trusted = true; }
@@ -111,6 +113,7 @@
       "imagemagick"
       "isacikgoz/taps/tldr"
       "jq"
+      "jrnxf/thokr/thokr"
       "krb5"
       "kubectx"
       "kubernetes-cli"
