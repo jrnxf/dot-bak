@@ -16,13 +16,16 @@
     # Only for the few fast-moving agent CLIs home-linux.nix takes from it.
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
 
-    # Third-party agent skills, pinned by flake.lock and linked by home.nix.
-    # Update with `nix flake update emil-skills`.
+    # Third-party agent skill repos, pinned by flake.lock. agent-skills.nix
+    # links every directory under each one's skills/. Add a new one to
+    # skillInputs below too. Update with `nix flake update <name>`.
     emil-skills.url = "github:emilkowalski/skills";
     emil-skills.flake = false;
+    i-have-adhd.url = "github:ayghri/i-have-adhd";
+    i-have-adhd.flake = false;
   };
 
-  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, nixpkgs-unstable, emil-skills }:
+  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, nixpkgs-unstable, ... }:
     let
       # The one username line to change if this isn't your machine.
       # bootstrap.sh offers to rewrite this for you if your macOS username differs.
@@ -32,6 +35,7 @@
       # how to set a real override without it leaking into the shared repo.
       localOverrides =
         if builtins.pathExists ./local.nix then import ./local.nix else { };
+      skillInputs = { inherit (inputs) emil-skills i-have-adhd; };
     in
     {
       darwinConfigurations."mac" = nix-darwin.lib.darwinSystem {
@@ -43,7 +47,7 @@
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-            home-manager.extraSpecialArgs = { inherit user emil-skills; };
+            home-manager.extraSpecialArgs = { inherit user skillInputs; };
             home-manager.users.${user} = import ./home-darwin.nix;
             # Pre-existing files at a managed path (e.g. from before this repo took over,
             # or a background daemon recreating its config dir) get renamed instead of
@@ -58,7 +62,7 @@
       homeConfigurations."linux" = home-manager.lib.homeManagerConfiguration {
         pkgs = nixpkgs.legacyPackages.x86_64-linux;
         extraSpecialArgs = {
-          inherit user emil-skills;
+          inherit user skillInputs;
           pkgsUnstable = import nixpkgs-unstable {
             system = "x86_64-linux";
             config.allowUnfreePredicate = pkg: nixpkgs.lib.getName pkg == "claude-code";
