@@ -23,6 +23,7 @@ Read `~/dotfiles/AGENTS.md` first. The README covers each area in depth.
 | Agent skill you wrote | `home/.agents/skills/<name>/`, plus its name in the `authored` list in `agent-skills.nix` |
 | Third-party skill checked in as a copy (only when upstream must stay pinned to a file, like the axi ones) | `home/.agents/skills/<name>/` and the `vendored` list in `agent-skills.nix` |
 | Third-party agent skill repo | A flake input with `flake = false` in `flake.nix`, added to `skillInputs` there; `agent-skills.nix` links every folder under its `skills/`. Prefer this over a checked-in copy |
+| Third-party skill repo nested one level deeper (`skills/<category>/<skill>`) | Its own flake input, NOT in `skillInputs` (that would link category folders); `agent-skills.nix` links just the one skill folder you want, patching `SKILL.md`'s `name:` field via `pkgs.runCommand` if it would collide with a built-in name - see `matt-code-review` |
 | MCP server for Claude | `home/.claude/skills/dotfiles-mcp/.mcp.json` |
 | Claude settings, hooks, agents, commands | `home/.claude/` (already linked) |
 | App config file | The file under `home/`, linked with `mkOutOfStoreSymlink` in `home.nix` so it stays editable |

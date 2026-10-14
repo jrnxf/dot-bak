@@ -338,6 +338,14 @@ declare the input in `flake.nix` and list it in `skillInputs` there. Update
 with `nix flake update <input> && ./rebuild.sh`. Do not use
 `npx skills add`: it installs untracked copies a new machine would not get.
 
+A repo that nests skills one level deeper (`skills/<category>/<skill>`, like
+[mattpocock/skills](https://github.com/mattpocock/skills)) isn't added to
+`skillInputs` - that would link category folders, not skills. Instead pin it
+as its own flake input and have `agent-skills.nix` link only the one skill
+you want, patching its `SKILL.md` `name:` field in a `pkgs.runCommand` copy
+if it would otherwise collide with a built-in skill name (see
+`matt-code-review`, linked from `skills/engineering/code-review`).
+
 [Firstmate](https://github.com/kunchenguid/firstmate) needs the binaries
 themselves on `PATH`, at minimum versions, so `firstmate-tools.nix` additionally
 packages pinned releases of those four plus `tasks-axi`, `treehouse`, and

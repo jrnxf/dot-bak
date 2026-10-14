@@ -23,6 +23,11 @@
     emil-skills.flake = false;
     i-have-adhd.url = "github:ayghri/i-have-adhd";
     i-have-adhd.flake = false;
+    # Nests one level deeper (skills/<category>/<skill>), so unlike the
+    # inputs above it is not added to skillInputs below - agent-skills.nix
+    # links only its one skill we want, not every category folder.
+    matt-skills.url = "github:mattpocock/skills";
+    matt-skills.flake = false;
   };
 
   outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, nixpkgs-unstable, ... }:
@@ -36,6 +41,7 @@
       localOverrides =
         if builtins.pathExists ./local.nix then import ./local.nix else { };
       skillInputs = { inherit (inputs) emil-skills i-have-adhd; };
+      mattSkills = inputs.matt-skills;
     in
     {
       darwinConfigurations."mac" = nix-darwin.lib.darwinSystem {
@@ -47,7 +53,7 @@
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-            home-manager.extraSpecialArgs = { inherit user skillInputs; };
+            home-manager.extraSpecialArgs = { inherit user skillInputs mattSkills; };
             home-manager.users.${user} = import ./home-darwin.nix;
             # Pre-existing files at a managed path (e.g. from before this repo took over,
             # or a background daemon recreating its config dir) get renamed instead of
@@ -62,7 +68,7 @@
       homeConfigurations."linux" = home-manager.lib.homeManagerConfiguration {
         pkgs = nixpkgs.legacyPackages.x86_64-linux;
         extraSpecialArgs = {
-          inherit user skillInputs;
+          inherit user skillInputs mattSkills;
           pkgsUnstable = import nixpkgs-unstable {
             system = "x86_64-linux";
             config.allowUnfreePredicate = pkg: nixpkgs.lib.getName pkg == "claude-code";

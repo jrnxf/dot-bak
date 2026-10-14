@@ -2,7 +2,7 @@
 # (shared, read by most agents), ~/.claude/skills and ~/.codex/skills.
 # Install skills here, never with `npx skills add`: that writes untracked
 # copies outside this repo that a new machine would not get.
-{ config, lib, skillInputs, ... }:
+{ config, lib, pkgs, skillInputs, mattSkills, ... }:
 
 let
   dotfiles = "${config.home.homeDirectory}/dotfiles";
@@ -32,6 +32,17 @@ let
     "lavish"
     "quota-axi"
   ];
+
+  # mattpocock/skills nests one level deeper than skillInputs expects
+  # (skills/<category>/<skill>), so it isn't in skillInputs - that would link
+  # category folders, not skills. Pick just the one skill we want instead.
+  # Its SKILL.md also declares `name: code-review`, which would collide with
+  # Claude Code's built-in /code-review, so patch only that line in a copy.
+  mattCodeReview = pkgs.runCommand "matt-code-review-skill" { } ''
+    cp -r ${mattSkills}/skills/engineering/code-review $out
+    chmod -R u+w $out
+    sed -i '0,/^name: code-review$/s//name: matt-code-review/' $out/SKILL.md
+  '';
 in
 
 {
@@ -43,5 +54,6 @@ in
     ++ lib.concatMap (src:
       map (name: linkSkill name "${src}/skills/${name}") (skillsIn "${src}/skills")
     ) (lib.attrValues skillInputs)
+    ++ [ (linkSkill "matt-code-review" mattCodeReview) ]
   );
 }
