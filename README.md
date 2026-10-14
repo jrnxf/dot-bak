@@ -318,14 +318,23 @@ The four tools in the [official AXI catalog](https://axi.md/) are installed usin
 their upstream skill-based setup: `gh-axi`, `chrome-devtools-axi`, `lavish-axi`
 (skill name `lavish`), and `quota-axi`. No community catalog tools are included.
 
-Their official skills live in `home/.agents/skills/` and `home.nix` links each one
-into `~/.agents/skills/`, `~/.claude/skills/`, and `~/.codex/skills/`. Run
+Their official skills live in `home/.agents/skills/` and `agent-skills.nix` links
+each one into `~/.agents/skills/`, `~/.claude/skills/`, and `~/.codex/skills/`. Run
 `./rebuild.sh` after adding or changing those links. The skills invoke the CLIs
 with `npx -y`; `node`, `gh`, and `google-chrome` are already declared in
 `configuration.nix`. No global npm install or extra Homebrew tap is needed.
 The skill files are checked in; CLI versions are resolved by npx rather than
 pinned by the Nix lockfile. Update the skills from their respective
 `kunchenguid/<tool>` repositories, keeping upstream content intact.
+
+### Third-party skills
+
+Skill repositories are flake inputs with `flake = false`, pinned by
+`flake.lock`. `agent-skills.nix` links every directory under the input's
+`skills/` into the same three places, so new upstream skills arrive with an
+update. Currently: [emilkowalski/skills](https://github.com/emilkowalski/skills).
+Update with `nix flake update emil-skills && ./rebuild.sh`. Do not use
+`npx skills add`: it installs untracked copies a new machine would not get.
 
 [Firstmate](https://github.com/kunchenguid/firstmate) needs the binaries
 themselves on `PATH`, at minimum versions, so `firstmate-tools.nix` additionally
