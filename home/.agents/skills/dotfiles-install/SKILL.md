@@ -22,7 +22,7 @@ Read `~/dotfiles/AGENTS.md` first. The README covers each area in depth.
 | Packaged nowhere | A pinned derivation in its own file, like `leaf.nix` or `firstmate-tools.nix`; bump version and hash together |
 | Agent skill you wrote | `home/.agents/skills/<name>/`, plus its name in the `authored` list in `agent-skills.nix` |
 | Third-party skill checked in as a copy (only when upstream must stay pinned to a file, like the axi ones) | `home/.agents/skills/<name>/` and the `vendored` list in `agent-skills.nix` |
-| Third-party agent skill repo | A flake input with `flake = false` in `flake.nix`, passed through `extraSpecialArgs` and linked in `agent-skills.nix` |
+| Third-party agent skill repo | A flake input with `flake = false` in `flake.nix`, added to `skillInputs` there; `agent-skills.nix` links every folder under its `skills/`. Prefer this over a checked-in copy |
 | MCP server for Claude | `home/.claude/skills/dotfiles-mcp/.mcp.json` |
 | Claude settings, hooks, agents, commands | `home/.claude/` (already linked) |
 | App config file | The file under `home/`, linked with `mkOutOfStoreSymlink` in `home.nix` so it stays editable |

@@ -332,8 +332,10 @@ pinned by the Nix lockfile. Update the skills from their respective
 Skill repositories are flake inputs with `flake = false`, pinned by
 `flake.lock`. `agent-skills.nix` links every directory under the input's
 `skills/` into the same three places, so new upstream skills arrive with an
-update. Currently: [emilkowalski/skills](https://github.com/emilkowalski/skills).
-Update with `nix flake update emil-skills && ./rebuild.sh`. Do not use
+update. Currently: [emilkowalski/skills](https://github.com/emilkowalski/skills)
+and [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd). To add one,
+declare the input in `flake.nix` and list it in `skillInputs` there. Update
+with `nix flake update <input> && ./rebuild.sh`. Do not use
 `npx skills add`: it installs untracked copies a new machine would not get.
 
 [Firstmate](https://github.com/kunchenguid/firstmate) needs the binaries

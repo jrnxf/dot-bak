@@ -2,7 +2,7 @@
 # (shared, read by most agents), ~/.claude/skills and ~/.codex/skills.
 # Install skills here, never with `npx skills add`: that writes untracked
 # copies outside this repo that a new machine would not get.
-{ config, lib, emil-skills, ... }:
+{ config, lib, skillInputs, ... }:
 
 let
   dotfiles = "${config.home.homeDirectory}/dotfiles";
@@ -20,7 +20,6 @@ let
   authored = [
     "pr-walkthrough"
     "pr-visual-evidence"
-    "i-have-adhd"
     "dotfiles-install"
   ];
 
@@ -41,6 +40,8 @@ in
       linkSkill name (config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.agents/skills/${name}")
     ) (authored ++ vendored)
     # Third-party skills come from flake inputs, pinned by flake.lock.
-    ++ map (name: linkSkill name "${emil-skills}/skills/${name}") (skillsIn "${emil-skills}/skills")
+    ++ lib.concatMap (src:
+      map (name: linkSkill name "${src}/skills/${name}") (skillsIn "${src}/skills")
+    ) (lib.attrValues skillInputs)
   );
 }
