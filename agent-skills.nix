@@ -16,14 +16,18 @@ let
   skillsIn = dir:
     lib.attrNames (lib.filterAttrs (_: type: type == "directory") (builtins.readDir dir));
 
-  # Skills checked in under home/.agents/skills, editable in place. The axi
-  # ones are the official catalog skills, kept identical to upstream; they
-  # invoke their CLIs through npx.
+  # Skills written in this repo, under home/.agents/skills, editable in place.
   authored = [
     "pr-walkthrough"
     "pr-visual-evidence"
     "i-have-adhd"
     "dotfiles-install"
+  ];
+
+  # The official axi.md catalog skills, checked in beside the authored ones
+  # and kept identical to their kunchenguid/<tool> upstreams. They invoke
+  # their CLIs through npx.
+  vendored = [
     "gh-axi"
     "chrome-devtools-axi"
     "lavish"
@@ -35,7 +39,7 @@ in
   home.file = lib.mkMerge (
     map (name:
       linkSkill name (config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.agents/skills/${name}")
-    ) authored
+    ) (authored ++ vendored)
     # Third-party skills come from flake inputs, pinned by flake.lock.
     ++ map (name: linkSkill name "${emil-skills}/skills/${name}") (skillsIn "${emil-skills}/skills")
   );
