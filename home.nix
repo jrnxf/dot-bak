@@ -14,6 +14,8 @@ let
 in
 
 {
+  imports = [ ./agent-skills.nix ];
+
   home.username = user;
   # Linux uses the macOS-style path too (see README, "Linux machine"): tracked
   # hook commands and agent state name this home directory literally.
@@ -118,52 +120,6 @@ in
   home.file.".claude/skills/mkd".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.claude/skills/mkd";
 
-  # Share the authored skills across agents without replacing installed skills.
-  home.file.".agents/skills/pr-walkthrough".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.agents/skills/pr-walkthrough";
-  home.file.".claude/skills/pr-walkthrough".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.agents/skills/pr-walkthrough";
-  home.file.".codex/skills/pr-walkthrough".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.agents/skills/pr-walkthrough";
-  home.file.".agents/skills/pr-visual-evidence".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.agents/skills/pr-visual-evidence";
-  home.file.".claude/skills/pr-visual-evidence".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.agents/skills/pr-visual-evidence";
-  home.file.".codex/skills/pr-visual-evidence".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.agents/skills/pr-visual-evidence";
-  home.file.".agents/skills/i-have-adhd".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.agents/skills/i-have-adhd";
-  home.file.".claude/skills/i-have-adhd".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.agents/skills/i-have-adhd";
-  home.file.".codex/skills/i-have-adhd".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.agents/skills/i-have-adhd";
-
-  # Official axi.md catalog skills invoke their CLIs through Homebrew's npx.
-  home.file.".agents/skills/gh-axi".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.agents/skills/gh-axi";
-  home.file.".claude/skills/gh-axi".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.agents/skills/gh-axi";
-  home.file.".codex/skills/gh-axi".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.agents/skills/gh-axi";
-  home.file.".agents/skills/chrome-devtools-axi".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.agents/skills/chrome-devtools-axi";
-  home.file.".claude/skills/chrome-devtools-axi".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.agents/skills/chrome-devtools-axi";
-  home.file.".codex/skills/chrome-devtools-axi".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.agents/skills/chrome-devtools-axi";
-  home.file.".agents/skills/lavish".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.agents/skills/lavish";
-  home.file.".claude/skills/lavish".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.agents/skills/lavish";
-  home.file.".codex/skills/lavish".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.agents/skills/lavish";
-  home.file.".agents/skills/quota-axi".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.agents/skills/quota-axi";
-  home.file.".claude/skills/quota-axi".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.agents/skills/quota-axi";
-  home.file.".codex/skills/quota-axi".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.agents/skills/quota-axi";
-
   home.file.".curl-format.txt".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.curl-format.txt";
 
@@ -196,7 +152,7 @@ in
     config.lib.file.mkOutOfStoreSymlink agentInstructions;
   home.file.".config/opencode/AGENTS.md".source =
     config.lib.file.mkOutOfStoreSymlink agentInstructions;
-  # It also links any home/.agents/skills/<name>.work/ beside the skills above.
+  # It also links any home/.agents/skills/<name>.work/ beside agent-skills.nix's.
   home.activation.workOverlays = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
     run ${pkgs.bash}/bin/bash ${./work-overlays.sh} \
       ${lib.escapeShellArg dotfiles} ${lib.escapeShellArg agentInstructions}

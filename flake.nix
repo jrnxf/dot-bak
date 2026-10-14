@@ -15,9 +15,14 @@
 
     # Only for the few fast-moving agent CLIs home-linux.nix takes from it.
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
+
+    # Third-party agent skills, pinned by flake.lock and linked by home.nix.
+    # Update with `nix flake update emil-skills`.
+    emil-skills.url = "github:emilkowalski/skills";
+    emil-skills.flake = false;
   };
 
-  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, nixpkgs-unstable }:
+  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, nixpkgs-unstable, emil-skills }:
     let
       # The one username line to change if this isn't your machine.
       # bootstrap.sh offers to rewrite this for you if your macOS username differs.
@@ -38,7 +43,7 @@
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-            home-manager.extraSpecialArgs = { inherit user; };
+            home-manager.extraSpecialArgs = { inherit user emil-skills; };
             home-manager.users.${user} = import ./home-darwin.nix;
             # Pre-existing files at a managed path (e.g. from before this repo took over,
             # or a background daemon recreating its config dir) get renamed instead of
@@ -53,7 +58,7 @@
       homeConfigurations."linux" = home-manager.lib.homeManagerConfiguration {
         pkgs = nixpkgs.legacyPackages.x86_64-linux;
         extraSpecialArgs = {
-          inherit user;
+          inherit user emil-skills;
           pkgsUnstable = import nixpkgs-unstable {
             system = "x86_64-linux";
             config.allowUnfreePredicate = pkg: nixpkgs.lib.getName pkg == "claude-code";
