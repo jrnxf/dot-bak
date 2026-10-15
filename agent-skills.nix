@@ -21,6 +21,7 @@ let
     "pr-walkthrough"
     "pr-visual-evidence"
     "dotfiles-install"
+    "workers-builds"
   ];
 
   # The official axi.md catalog skills, checked in beside the authored ones
