@@ -163,10 +163,11 @@ function request-godmode() { lumos request --app-like "Apollo - Godmode Access R
 
 # Build the latest okfs (github.com/jrnxf/okfs) and install it to ~/.cargo/bin.
 # Inside an okfs checkout it builds that checkout as it stands; anywhere else
-# it keeps its own clone and pulls main first. Temporary: okfs gets a pinned
-# package like leaf.nix once it has releases.
+# it keeps its own clone and pulls main first. `build-okfs <commit>` builds
+# that commit instead, and `build-okfs -p` picks the commit with fzf.
+# Temporary: okfs gets a pinned package like leaf.nix once it has releases.
 build-okfs() {
-  local src
+  local src rev=$1
   src="$(git rev-parse --show-toplevel 2>/dev/null)"
   if ! grep -qs '^name = "okfs"$' "$src/Cargo.toml"; then
     src="$HOME/.cache/okfs-build/okfs"
@@ -176,7 +177,25 @@ build-okfs() {
       git clone git@github.com:jrnxf/okfs.git "$src" || return
     fi
   fi
-  (cd "$src" && nix --extra-experimental-features 'nix-command flakes' develop -c cargo install --path . --locked)
+  if [[ $rev == -p ]]; then
+    rev="$(git -C "$src" log --oneline --color=always |
+      fzf --ansi --no-sort --reverse --preview "git -C ${(q)src} show --stat --color=always {1}" |
+      awk '{print $1}')"
+    [[ -n $rev ]] || return
+  fi
+  local -a from=(--path .)
+  if [[ -n $rev ]]; then
+    local commit
+    commit="$(git -C "$src" rev-parse --verify --quiet "$rev^{commit}")" || {
+      print -u2 "build-okfs: no such commit: $rev"
+      return 1
+    }
+    # cargo checks the commit out into its own cache, so the working tree is
+    # left alone; sharing target/ keeps the dependencies built.
+    from=(--git "file://$src" --rev "$commit")
+    local -x CARGO_TARGET_DIR="$src/target"
+  fi
+  (cd "$src" && nix --extra-experimental-features 'nix-command flakes' develop -c cargo install "${from[@]}" --locked)
 }
 
 # homelab ssh picker wrapper (managed by ansible pre-migration)
