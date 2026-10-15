@@ -2,7 +2,7 @@
 // Commit: 9ad9158a93c0de0c045e1c6b27df37da698bc8af (sahaj-b/cursor-shaders)
 // License: MIT, Copyright (c) 2026 Sahaj Bhatt
 //
-// The file below is upstream, verbatim.
+// The file below is upstream, except for one line: THRESHOLD_MIN_DISTANCE (marked "local change").
 
 // sRGB -> Linear conversion (needed because Ghostty passes sRGB values but the shader pipeline operates in linear color space)
 vec3 sRGBToLinear(vec3 c) {
@@ -13,7 +13,7 @@ vec3 sRGBToLinear(vec3 c) {
 vec4 TRAIL_COLOR = vec4(sRGBToLinear(iCurrentCursorColor.rgb), iCurrentCursorColor.a); // for custom color: vec4(0.2, 0.6, 1.0, 0.5); (wrap in sRGBToLinear for correct brightness)
 const float DURATION = 0.2; // total animation time
 const float TRAIL_SIZE = 0.8; // 0.0 = all corners move together. 1.0 = max smear (leading corners jump instantly)
-const float THRESHOLD_MIN_DISTANCE = 1.5; // min distance to show trail (units of cursor height)
+const float THRESHOLD_MIN_DISTANCE = 0.0; // local change: trail on every keystroke (upstream 1.5)
 const float BLUR = 1.0; // blur size in pixels (for antialiasing)
 const float TRAIL_THICKNESS = 1.0;  // 1.0 = full cursor height, 0.0 = zero height, >1.0 = funky aah
 const float TRAIL_THICKNESS_X = 0.9;
