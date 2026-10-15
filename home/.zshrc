@@ -58,6 +58,8 @@ if [[ $TERM != "dumb" ]]; then
   eval "$(starship init zsh)"
 fi
 
+# EDITOR=nvim would otherwise make zsh pick the vi keymap
+bindkey -e
 bindkey '^f' autosuggest-accept
 bindkey "^ " fzf-tab-complete
 
