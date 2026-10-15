@@ -18,6 +18,12 @@
   # every shell rebuilds the completion dump twice (~7s startup).
   programs.zsh.enableGlobalCompInit = false;
 
+  # Touch ID for sudo; reattach makes it work inside tmux too.
+  security.pam.services.sudo_local = {
+    touchIdAuth = true;
+    reattach = true;
+  };
+
   system.defaults = {
     NSGlobalDomain = {
       AppleInterfaceStyle = "Dark";
@@ -26,7 +32,8 @@
       AppleShowAllExtensions = true;
       _HIHideMenuBar = false;
     };
-    dock.autohide = false;
+    # No dock.* settings: nix-darwin restarts the Dock on every activation
+    # when any are set. autohide = false is the macOS default anyway.
     finder.FXPreferredViewStyle = "Nlsv";  # list view by default
     finder.CreateDesktop = false;          # clean desktop
     trackpad.Clicking = true;              # tap to click
@@ -47,7 +54,7 @@
     enable = true;
     onActivation.cleanup = "zap";  # remove anything not listed here
     onActivation.autoUpdate = true;
-    onActivation.extraFlags = [ "--force" ];
+    onActivation.extraFlags = [ "--force" "--quiet" ];
     taps = [
       # Trust flags mirror the pre-migration Brewfile: brew 6 refuses to load
       # formulae from untrusted third-party taps during bundle.
