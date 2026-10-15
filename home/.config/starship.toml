@@ -1,10 +1,9 @@
 add_newline = false
-format = "$hostname$directory$git_branch$git_status$cmd_duration$line_break$character"
+format = "$hostname$directory$git_branch$cmd_duration$line_break$character"
 
 [hostname]
 ssh_only = true
-ssh_symbol = "󰣀 "
-format = "[$ssh_symbol$hostname]($style) "
+format = "[ ssh $hostname ]($style) "
 style = "bold black bg:yellow"
 
 [character]
