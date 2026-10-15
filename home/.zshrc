@@ -235,9 +235,8 @@ case ":$PATH:" in
   *":$PNPM_HOME:"*) ;;
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
-[[ $commands[rbenv] ]] && eval "$(rbenv init - zsh)"
-# Keep Homebrew bins ahead of rbenv shims so `tilt` (Homebrew) wins over
-# the rbenv `tilt` gem shim.
+# Keep Homebrew bins first so `tilt` (Homebrew) wins over any `tilt` gem
+# shim.
 export PATH="/opt/homebrew/bin:$PATH"
 if [ -f "$HOME/google-cloud-sdk/path.zsh.inc" ]; then . "$HOME/google-cloud-sdk/path.zsh.inc"; fi
 if [ -f "$HOME/google-cloud-sdk/completion.zsh.inc" ]; then . "$HOME/google-cloud-sdk/completion.zsh.inc"; fi

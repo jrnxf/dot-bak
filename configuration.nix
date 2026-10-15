@@ -152,7 +152,6 @@
       "pyenv"
       "qemu"
       "railway"
-      "rbenv"
       "readline"
       "ripgrep"
       "rsync"
