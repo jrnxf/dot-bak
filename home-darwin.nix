@@ -50,6 +50,8 @@ in
   # Ghostty keeps runtime state (auto/) next to its config, so link just the file.
   home.file.".config/ghostty/config".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/ghostty/config";
+  home.file.".config/ghostty/shaders/cursor-glide.glsl".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/ghostty/shaders/cursor-glide.glsl";
 
   # Karabiner saves via write-temp-then-rename, which clobbers a file symlink
   # on every GUI edit. Linking the whole directory instead makes those renames
