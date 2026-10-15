@@ -21,5 +21,5 @@ macos-icon-screen-color = 0B1B1D
 keybind = shift+enter=text:\n
 theme = Cursor Dark
 shell-integration-features = ssh-env,ssh-terminfo
-# Smooth cursor glide shader. To turn it off, comment out the custom-shader line.
-custom-shader = shaders/cursor-glide.glsl
+# Cursor trail shader (sahaj-b cursor_warp). To turn it off, comment out the custom-shader line.
+custom-shader = shaders/cursor_warp.glsl
