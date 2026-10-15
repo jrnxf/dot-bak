@@ -272,6 +272,7 @@ alias -- d-srac='d-sac && d-rac'
 alias -- dc='git commit -m "$(date +%m/%d/%y\ %H:%M)"'
 alias -- dev='cd ~/Dev'
 alias -- dot='cd ~/dotfiles'
+alias -- ff=fastfetch
 alias -- gaca='git commit -a --amend --no-edit'
 alias -- gca='git commit --amend --no-edit'
 alias -- gotop='gotop --mbps'
