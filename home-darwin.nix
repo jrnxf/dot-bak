@@ -41,6 +41,10 @@ in
     # gui apps not installable via homebrew casks
     marktext  # markdown editor
   ];
+  # Hide Homebrew's "Hide these hints with ..." footers. Activation sets its
+  # own copy (homebrew.onActivation.extraEnv in configuration.nix).
+  home.sessionVariables.HOMEBREW_NO_ENV_HINTS = "1";
+
   fonts.fontconfig.enable = true;
   # Copy .app bundles into ~/Applications/Home Manager Apps instead of
   # symlinking them into the store; Spotlight and Raycast skip symlinked apps.

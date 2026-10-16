@@ -1,0 +1,8 @@
+{
+  "chat.hookFilesLocations": {
+    "~/.auspex/vscode/hooks.json": true,
+    "~/.claude/settings.json": false,
+    "~/.copilot/hooks": false
+  },
+  "chat.useHooks": true
+}
