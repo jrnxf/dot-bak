@@ -56,6 +56,7 @@ in
   home.file.".local/share/zsh-packages/autosuggestions".source = pkgs.zsh-autosuggestions;
   home.file.".local/share/zsh-packages/syntax-highlighting".source = pkgs.zsh-syntax-highlighting;
   home.file.".local/share/zsh-packages/fzf-tab".source = fzfTab;
+  home.file.".local/share/zsh-packages/oh-my-zsh".source = pkgs.oh-my-zsh;
 
   home.file.".zshrc".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.zshrc";

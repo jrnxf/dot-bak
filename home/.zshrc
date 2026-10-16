@@ -32,6 +32,14 @@ for plugin in "${plugins[@]}"; do
 done
 unset plugin plugins
 
+# Oh My Zsh's git aliases (glog, gst, gco, ...) without the rest of Oh My Zsh.
+# lib/git.zsh provides git_current_branch, which the aliases call.
+autoload -Uz is-at-least add-zsh-hook
+omz="$HOME/.local/share/zsh-packages/oh-my-zsh/share/oh-my-zsh"
+source "$omz/lib/git.zsh"
+source "$omz/plugins/git/git.plugin.zsh"
+unset omz
+
 # Shared history across interactive shells.
 HISTSIZE="10000"
 SAVEHIST="10000"
