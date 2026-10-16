@@ -22,6 +22,10 @@ in
   # hook commands and agent state name this home directory literally.
   home.homeDirectory = "/Users/${user}";
   home.stateVersion = "24.11";
+  # Building the home-configuration.nix man page makes Determinate Nix warn
+  # "derivation named 'options.json' ... without a proper context" on every
+  # rebuild. The options are documented online anyway.
+  manual.manpages.enable = false;
   home.packages = with pkgs; [
     # cli i use constantly
     ripgrep   # fast search

@@ -55,6 +55,14 @@
     onActivation.cleanup = "zap";  # remove anything not listed here
     onActivation.autoUpdate = true;
     onActivation.extraFlags = [ "--force" "--quiet" ];
+    # Activation runs brew under sudo, so these don't come from the shell env.
+    onActivation.extraEnv = {
+      HOMEBREW_NO_ENV_HINTS = "1";
+      # Only the notice; analytics stay on. Brew can't remember it was shown
+      # because nix-homebrew's repo has no writable .git/config.
+      HOMEBREW_NO_ANALYTICS_MESSAGE_OUTPUT = "1";
+      HOMEBREW_NO_UPDATE_REPORT_NEW = "1";
+    };
     taps = [
       # Trust flags mirror the pre-migration Brewfile: brew 6 refuses to load
       # formulae from untrusted third-party taps during bundle.
