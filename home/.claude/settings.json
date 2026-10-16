@@ -119,6 +119,7 @@
   "theme": "auto",
   "preferredNotifChannel": "ghostty",
   "autoCompactEnabled": true,
+  "remoteControlAtStartup": true,
   "agentPushNotifEnabled": true,
   "skipAutoPermissionPrompt": true
 }
