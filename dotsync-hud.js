@@ -7,7 +7,7 @@ ObjC.import('AppKit');
 
 function run(argv) {
   const kind = argv[0] || 'ok';
-  const title = argv[1] || 'dotfiles up to date';
+  const title = argv[1] || 'dotfiles synced and reloaded';
   const clip = (s, n) => (s.length > n ? s.slice(0, n - 1) + '\u2026' : s);
   const detail = clip(argv[2] || '', 72);
   const seconds = parseFloat(argv[3] || '5');

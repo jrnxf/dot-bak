@@ -158,15 +158,15 @@ sync() {
     if [ "$applied" = system ]; then
       notify warn "dotfiles followed GitHub, reload for system settings" "followed rewritten history on GitHub"
     else
-      notify ok "dotfiles up to date" "followed rewritten history on GitHub"
+      notify ok "dotfiles synced and reloaded" "followed rewritten history on GitHub"
     fi
   elif [ "$behind" -gt 0 ]; then
-    # Claim "up to date" only when it is checked: this machine has exactly
+    # Claim "synced and reloaded" only when it is checked: this machine has exactly
     # what GitHub has, all of it applied.
     if [ "$applied" = system ]; then
       notify warn "dotfiles pulled, reload for system settings" "$(pulled_summary "$old" "$up")"
     elif [ "$(git rev-parse HEAD)" = "$(git rev-parse '@{u}')" ]; then
-      notify ok "dotfiles up to date" "$(pulled_summary "$old" "$up")"
+      notify ok "dotfiles synced and reloaded" "$(pulled_summary "$old" "$up")"
     fi
   elif [ "$applied" = system ]; then
     notify warn "dotfiles applied, reload for system settings" "$(git log -1 --format=%s)"

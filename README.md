@@ -178,7 +178,7 @@ Every machine with this repo keeps `~/dotfiles` in step with GitHub on its own, 
 
 On a Mac, a sync that pulls commits or leaves a system change waiting also shows a HUD at the bottom of the screen with a sound, and so does a sync that fails in a new way:
 
-- Green with Glass: `dotfiles up to date`. This machine now has exactly what GitHub has, all of it applied.
+- Green with Glass: `dotfiles synced and reloaded`. This machine now has exactly what GitHub has, all of it applied.
 - Amber with Purr: `dotfiles pulled, reload for system settings`, or `dotfiles applied, ...` for a local commit. The home config is applied; the system config waits for `reload`.
 - Red with Basso: `dotfiles sync failed`, with the reason. Each failure shows once, not every minute, and a fetch that fails because the machine is offline shows nothing.
 
