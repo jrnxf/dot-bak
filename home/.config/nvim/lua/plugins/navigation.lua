@@ -8,6 +8,8 @@ return {
         enabled = true,
         sources = {
           explorer = { hidden = true },
+          files = { hidden = true, follow = true },
+          grep = { hidden = true, follow = true },
         },
       },
       explorer = { replace_netrw = true },  -- sidebar tree; `nvim <dir>` opens it

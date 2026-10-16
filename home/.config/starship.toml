@@ -3,7 +3,7 @@ format = "$hostname$directory$git_branch$cmd_duration$line_break$character"
 
 [hostname]
 ssh_only = true
-format = "[ ssh $hostname ]($style) "
+format = "[$hostname]($style) "
 style = "bold black bg:yellow"
 
 [character]
