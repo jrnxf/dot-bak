@@ -11,7 +11,7 @@ Use Nix for installation and symlinked files under `home/` for editable applicat
 
 ## Syncing
 
-Every machine runs `dotsync` (README, "Syncing machines"): a commit here is pushed right away, and other machines pull it within a minute. Commit only what is ready to ship to every machine.
+Every machine runs `dotsync` (README, "Syncing machines"): a commit here is pushed right away, other machines pull it within a minute, and every machine applies its home config without asking. Commit only what is ready to ship to every machine.
 
 ## Maintaining this file
 

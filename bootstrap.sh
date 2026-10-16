@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Takes a fresh Mac from nothing to a built nix-darwin config.
+# Takes a fresh Mac from nothing to a built nix-darwin and Home Manager config.
 # Run this once. After it finishes, use ./rebuild.sh for every later change.
 set -euo pipefail
 
@@ -63,5 +63,9 @@ sudo "$NIX_BIN" run github:nix-darwin/nix-darwin/nix-darwin-26.05#darwin-rebuild
   switch --flake "$DIR#mac"
 # If this still fails with "nix: command not found", open a new terminal
 # (Determinate adds nix to new shells' PATH) and re-run ./bootstrap.sh.
+
+echo "==> Step 5: first Home Manager switch"
+# Home Manager runs standalone, not inside nix-darwin (flake.nix).
+"$DIR/rebuild.sh"
 
 echo "==> Done. Use ./rebuild.sh for future changes."

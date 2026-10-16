@@ -48,7 +48,7 @@ Change the host label or CPU architecture if needed, and read the Homebrew clean
 ./bootstrap.sh
 ```
 
-`bootstrap.sh` does four things, in order:
+`bootstrap.sh` does five things, in order:
 
 1. Installs Determinate Nix, if it isn't already installed.
 2. Checks that this repo lives at `~/dotfiles`.
@@ -56,6 +56,7 @@ Change the host label or CPU architecture if needed, and read the Homebrew clean
 3. Checks the `user` configured in `flake.nix` against your actual macOS username, and offers to fix it for you if they differ.
 4. Runs the first `darwin-rebuild switch`.
    It fetches the `darwin-rebuild` tool from the nix-darwin 26.05 release branch, then applies this repo's locked flake config.
+5. Runs `rebuild.sh`, which applies the home config.
 
 After that, `darwin-rebuild` exists and you're on the normal workflow below.
 
@@ -66,6 +67,7 @@ Once Nix is installed (`bootstrap.sh` step 1 handles that), you can check that t
 ```sh
 nix flake check --no-build
 nix build .#darwinConfigurations.mac.system --dry-run
+nix build .#homeConfigurations.mac.activationPackage --dry-run
 ```
 
 If you renamed the host label in "Make it yours", substitute your label for `mac` in these commands.
@@ -80,6 +82,12 @@ Edit the config files in place, then apply:
 
 That's it.
 No separate build-and-copy step.
+
+The config has two halves.
+`homeConfigurations.mac` is everything user-level (packages, links, agent setup), applied by standalone Home Manager with no sudo.
+`darwinConfigurations.mac` is the system: macOS defaults, Homebrew and Touch ID.
+`rebuild.sh` always applies the home half and runs `sudo darwin-rebuild switch` only when the system half changed, so most rebuilds never ask for a password.
+You rarely need to run it at all: a commit applies itself (see "Syncing machines").
 
 ## Linux machine
 
@@ -150,6 +158,10 @@ Every machine with this repo keeps `~/dotfiles` in step with GitHub on its own, 
   `home/.gitconfig` turns on `.githooks/` for this repo only.
 - A launchd agent on the Mac and a systemd user timer on Linux run `dotsync sync` every minute.
   It fast-forwards to upstream, rebases local commits onto it when the tree is clean, and pushes anything ahead.
+- When a pulled or committed change needs a rebuild, the same sync applies it with `rebuild.sh --auto`.
+  That applies the home config as committed, never uncommitted edits, and never asks for sudo.
+  A change to the system config still waits for you to run `reload`.
+  A commit that fails to apply is reported once and not retried until the next commit; `~/.local/state/dotfiles/apply.log` has the full output.
 - It never merges, stashes or force-pushes.
   When it can't sync cleanly, such as an uncommitted edit to a file that changed upstream or two commits that conflict, it leaves the repo alone and reports why.
 
@@ -158,14 +170,14 @@ Every machine with this repo keeps `~/dotfiles` in step with GitHub on its own, 
 - `*`: uncommitted changes, the one thing that does not sync.
 - `⇡`: commits not pushed yet.
 - `!`: the last sync failed; `dotsync why` says why.
-- `reload`: a pulled change only takes effect after `reload`.
+- `reload`: a change waits on a rebuild: a system change for `reload`, or one dotsync has not applied yet.
   Most of `home/` is live-linked and applies the moment it is pulled.
-  Nix files, the scripts at the root, and the few files Home Manager copies need a rebuild.
+  Nix files, the scripts at the root, and the few files Home Manager copies need a rebuild, which dotsync runs itself.
 
-On a Mac, a sync that pulls commits also shows a HUD at the bottom of the screen with a sound, and so does a sync that fails in a new way:
+On a Mac, a sync that pulls commits or leaves a system change waiting also shows a HUD at the bottom of the screen with a sound, and so does a sync that fails in a new way:
 
-- Green with Glass: `dotfiles up to date`. This machine now has exactly what GitHub has, and nothing pulled waits on a rebuild.
-- Amber with Purr: `dotfiles pulled, reload to apply`.
+- Green with Glass: `dotfiles up to date`. This machine now has exactly what GitHub has, all of it applied.
+- Amber with Purr: `dotfiles pulled, reload for system settings`, or `dotfiles applied, ...` for a local commit. The home config is applied; the system config waits for `reload`.
 - Red with Basso: `dotfiles sync failed`, with the reason. Each failure shows once, not every minute, and a fetch that fails because the machine is offline shows nothing.
 
 The detail line names the commits pulled. `dotsync-hud.js` draws it through the `osascript` that ships with macOS; Linux shows nothing.
@@ -180,8 +192,8 @@ If you clone it, review these before you run `bootstrap.sh`:
 
 - **Username**: run `./bootstrap.sh` (it detects your macOS username and offers to set it) OR change the single `user = "jrnxf"` line in `flake.nix`.
   Everything else (`configuration.nix`, `home.nix`, home directory paths) is threaded from that one variable.
-- **Host label** `"mac"`, in three places: `flake.nix` (the `darwinConfigurations."mac"` name), `rebuild.sh` (the `#mac` at the end of the flake reference), and `bootstrap.sh`'s first-switch command (also `#mac`).
-  All three have to match.
+- **Host label** `"mac"`, in three places: `flake.nix` (the `darwinConfigurations."mac"` and `homeConfigurations."mac"` names), `rebuild.sh` (`host=mac`), and `bootstrap.sh`'s first-switch command (`#mac`).
+  All of them have to match.
 - **CPU architecture**, `hostPlatform` in `configuration.nix` (see Prerequisites above).
 
 **Git identity:** this config deliberately does not set your git name or email.
@@ -226,7 +238,7 @@ If you don't use it, just remove it from `brews` in your copy.
 - `firstmate-tools.nix` - pinned agent CLIs, packaged once for both systems.
 - `leaf.nix` - the pinned `leaf` markdown renderer the Claude Code `/mkd` mod runs.
 - `rebuild.sh` - re-applies the config after the first switch, on either OS.
-  Run this after changing Nix declarations or adding managed links.
+  dotsync runs it for each commit; run it yourself to try an uncommitted change.
 - `work-overlays.sh` - applies the machine-local overlays described below on every switch.
 - `dotsync.sh`, `dotsync.nix`, `dotsync-hud.js`, `.githooks/` - keep every machine's clone in step with GitHub; see "Syncing machines".
 - `home/` - the actual config files that get symlinked into place; the sections below explain the shared symlink model and Pi's narrower selective setup.

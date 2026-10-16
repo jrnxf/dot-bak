@@ -2,18 +2,20 @@
 # Keeps ~/dotfiles in step across machines (README, "Syncing machines").
 #
 #   dotsync sync    fetch; fast-forward, or rebase local commits when the tree
-#                   is clean; push what is ahead. Run every minute by a timer
-#                   and after every commit by the repo's post-commit hook.
+#                   is clean; push what is ahead; then, when a pulled or
+#                   committed change needs a rebuild, apply it with
+#                   `rebuild.sh --auto`. Run every minute by a timer and after
+#                   every commit by the repo's post-commit hook.
 #   dotsync status  one short line, empty when all is well:
 #                   * uncommitted, ⇡ unpushed, ! last sync failed (the reason is
-#                   in `dotsync why`), reload when nix-applied files changed
-#                   since the last rebuild.
+#                   in `dotsync why`), reload when a change waits for `reload`.
 #   dotsync why     why the last sync failed.
 #   dotsync built   record HEAD as applied; rebuild.sh runs it.
 #
-# When a sync pulls commits, or fails in a new way, it runs $DOTSYNC_NOTIFY
-# with <ok|warn|fail> <title> <detail>. On a Mac that is the HUD in
-# dotsync-hud.js (dotsync.nix sets it); elsewhere nothing is shown.
+# When a sync pulls commits, leaves a system change for `reload`, or fails in
+# a new way, it runs $DOTSYNC_NOTIFY with <ok|warn|fail> <title> <detail>. On
+# a Mac that is the HUD in dotsync-hud.js (dotsync.nix sets it); elsewhere
+# nothing is shown.
 #
 # It never merges, stashes or force-pushes: anything it cannot do cleanly is
 # left alone and reported.
@@ -21,6 +23,7 @@ set -uo pipefail
 
 repo=${DOTSYNC_REPO:-$HOME/dotfiles}
 state=${DOTSYNC_STATE:-${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles}
+apply_cmd=${DOTSYNC_APPLY:-$repo/rebuild.sh}
 mkdir -p "$state"
 
 git() { command git -C "$repo" "$@"; }
@@ -52,7 +55,7 @@ pulled_summary() {
   fi
 }
 
-# rebuild_pending: true when pulled changes only apply after `reload`.
+# rebuild_pending: true when HEAD has changes that only apply after a rebuild.
 rebuild_pending() {
   local built
   built=$(cat "$state/built" 2>/dev/null)
@@ -64,6 +67,30 @@ rebuild_pending() {
 # a live link (mkOutOfStoreSymlink) and applies the moment it is pulled.
 needs_rebuild() {
   grep -qE '\.nix$|^flake\.lock$|^[^/]+\.(sh|js)$|^home/firstmate/|^home/\.agents/'
+}
+
+# apply: rebuild.sh --auto for HEAD, then record HEAD as built. Prints
+# "system" when a system change still waits for `reload`. A config that fails
+# to apply fails the same way every minute, so after a failure it waits for
+# the next commit.
+apply() {
+  local head out
+  head=$(git rev-parse HEAD)
+  if [ "$(cat "$state/apply-failed" 2>/dev/null)" != "$head" ]; then
+    if out=$("$apply_cmd" --auto 2>"$state/apply.log"); then
+      rm -f "$state/apply-failed"
+      printf '%s\n' "$head" >"$state/built"
+      if [ "$out" = system ]; then
+        printf '%s\n' "$head" >"$state/system-pending"
+        echo system
+      else
+        rm -f "$state/system-pending"
+      fi
+      return 0
+    fi
+    printf '%s\n' "$head" >"$state/apply-failed"
+  fi
+  fail "couldn't apply the config: $(grep . "$state/apply.log" | tail -n1)"
 }
 
 sync() {
@@ -104,16 +131,22 @@ sync() {
   if [ "$ahead" -gt 0 ]; then
     git push --quiet 2>/dev/null || fail "push failed"
   fi
+  local applied=""
+  if rebuild_pending; then
+    applied=$(apply) || exit 1
+  fi
   rm -f "$state/sync-error"
 
   if [ "$behind" -gt 0 ]; then
     # Claim "up to date" only when it is checked: this machine has exactly
-    # what GitHub has, and nothing pulled waits on a rebuild.
-    if rebuild_pending; then
-      notify warn "dotfiles pulled, reload to apply" "$(pulled_summary "$old" "$up")"
+    # what GitHub has, all of it applied.
+    if [ "$applied" = system ]; then
+      notify warn "dotfiles pulled, reload for system settings" "$(pulled_summary "$old" "$up")"
     elif [ "$(git rev-parse HEAD)" = "$(git rev-parse '@{u}')" ]; then
       notify ok "dotfiles up to date" "$(pulled_summary "$old" "$up")"
     fi
+  elif [ "$applied" = system ]; then
+    notify warn "dotfiles applied, reload for system settings" "$(git log -1 --format=%s)"
   fi
 }
 
@@ -123,7 +156,7 @@ status() {
   grep -q '^[^#]' <<<"$porcelain" && out+="*"
   grep -qE '^# branch\.ab \+[1-9]' <<<"$porcelain" && out+="⇡"
   [ -e "$state/sync-error" ] && out+="!"
-  rebuild_pending && out+="${out:+ }reload"
+  { rebuild_pending || [ -e "$state/system-pending" ]; } && out+="${out:+ }reload"
   [ -n "$out" ] && printf 'dotfiles %s\n' "$out"
   return 0
 }
@@ -137,7 +170,10 @@ case ${1:-} in
     ;;
   status) status ;;
   why) cat "$state/sync-error" 2>/dev/null || echo "last sync succeeded" ;;
-  built) git rev-parse HEAD >"$state/built" ;;
+  built)
+    git rev-parse HEAD >"$state/built"
+    rm -f "$state/system-pending" "$state/apply-failed"
+    ;;
   *)
     echo "usage: dotsync sync|status|why|built" >&2
     exit 2

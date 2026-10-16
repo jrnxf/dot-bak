@@ -28,15 +28,29 @@ git clone -q "$TMP/origin.git" "$TMP/b"
 
 # run <clone> <command>: dotsync against that clone with its own state dir.
 # Notifications are recorded to notes-<clone>, one per line, instead of shown.
+# Applies go to a fake rebuild.sh that logs each call to applies-<clone> and
+# does what apply-mode says: succeed, leave a system change, or fail.
 cat >"$TMP/notify" <<'SH'
 #!/bin/sh
 printf '%s|%s|%s\n' "$1" "$2" "$3" >>"$NOTES"
 SH
-chmod +x "$TMP/notify"
+cat >"$TMP/apply" <<'SH'
+#!/bin/sh
+printf '%s\n' "$*" >>"$APPLIES"
+case $(cat "$APPLY_MODE" 2>/dev/null) in
+  system) echo "activating" >&2; echo system ;;
+  fail) echo "activating" >&2; echo "error: attribute 'nope' missing" >&2; exit 1 ;;
+  *) echo "activating" >&2 ;;
+esac
+SH
+chmod +x "$TMP/notify" "$TMP/apply"
 run() {
   NOTES="$TMP/notes-$1" DOTSYNC_NOTIFY="$TMP/notify" \
+    APPLIES="$TMP/applies-$1" APPLY_MODE="$TMP/apply-mode" DOTSYNC_APPLY="$TMP/apply" \
     DOTSYNC_REPO="$TMP/$1" DOTSYNC_STATE="$TMP/state-$1" "$DOTSYNC" "$2"
 }
+# applies <clone>: how many applies ran since the last call, then forget them.
+applies() { grep -c . "$TMP/applies-$1" 2>/dev/null || echo 0; rm -f "$TMP/applies-$1"; }
 # notes <clone>: the notifications since the last call, then forget them.
 notes() { cat "$TMP/notes-$1" 2>/dev/null; rm -f "$TMP/notes-$1"; }
 commit() { # commit <clone> <file> <content>
@@ -101,18 +115,52 @@ git -C "$TMP/b" reset -q --hard '@{u}'
 run b sync
 pass "conflicting commits are left alone and reported"
 
-# --- reload marker -------------------------------------------------------------
+# --- apply --------------------------------------------------------------------
 
-assert_contains "$(run b status)" "reload" "never rebuilt must show reload"
+# Every sync above applied once: neither clone had been built yet.
+applies a >/dev/null; applies b >/dev/null
 run b built
 [ -z "$(run b status)" ] || fail "a clean, rebuilt, synced repo must print nothing"
 commit a notes.txt "docs only"
 run a sync && run b sync
+[ "$(applies b)" = 0 ] || fail "a live-linked change must not apply"
 [ -z "$(run b status)" ] || fail "a live-linked change must not ask for reload"
 commit a home.nix "{ }"
+run a sync
+[ "$(applies a)" = 1 ] || fail "a committed .nix change must apply where it was committed"
+run b sync
+[ "$(cat "$TMP/applies-b")" = "--auto" ] || fail "a pulled .nix change must apply with --auto"
+applies b >/dev/null
+[ -z "$(run b status)" ] || fail "an applied change must not ask for reload"
+run b sync
+[ "$(applies b)" = 0 ] || fail "an applied HEAD must not apply again"
+pass "a change that needs a rebuild applies itself, once"
+
+echo system >"$TMP/apply-mode"
+commit a configuration.nix "{ }"
 run a sync && run b sync
-assert_contains "$(run b status)" "reload" "a pulled .nix change must ask for reload"
-pass "reload shows only for changes that need a rebuild"
+assert_contains "$(run b status)" "reload" "a waiting system change must show reload"
+run b built
+[ -z "$(run b status)" ] || fail "a reload must clear the system marker"
+pass "a system change waits for reload"
+
+echo fail >"$TMP/apply-mode"
+notes b >/dev/null
+commit a home.nix "{ broken }"
+run a sync 2>/dev/null; run b sync 2>/dev/null && fail "a failed apply must fail the sync"
+assert_contains "$(notes b)" "fail|dotfiles sync failed|couldn't apply the config: error: attribute 'nope' missing" \
+  "a failed apply must notify with its last error line"
+assert_contains "$(run b status)" "!" "a failed apply must show !"
+assert_contains "$(run b status)" "reload" "a failed apply must still show reload"
+applies b >/dev/null
+run b sync 2>/dev/null && fail "the same HEAD must keep failing"
+[ "$(applies b)" = 0 ] || fail "a HEAD that failed to apply must not retry every minute"
+[ -z "$(notes b)" ] || fail "a failed apply must notify once"
+rm -f "$TMP/apply-mode"
+commit a home.nix "{ fixed }"
+run a sync; run b sync || fail "a new commit must retry the apply"
+assert_not_contains "$(run b status)" "!" "a successful apply must clear !"
+pass "a failed apply is reported once and retried on the next commit"
 
 # --- notifications ---------------------------------------------------------------
 
@@ -131,9 +179,21 @@ run b built
 commit a seven.txt "1"; commit a eight.nix "{ }"
 run a sync
 run b sync
-[ "$(notes b)" = "warn|dotfiles pulled, reload to apply|pulled 2 commits, latest: a edits eight.nix" ] \
-  || fail "a pull that needs a rebuild must notify warn"
-run b built
+[ "$(notes b)" = "ok|dotfiles up to date|pulled 2 commits, latest: a edits eight.nix" ] \
+  || fail "a pull applied in full must notify ok"
+
+echo system >"$TMP/apply-mode"
+commit a nine.nix "{ }"
+run a sync
+[ "$(notes a)" = "warn|dotfiles applied, reload for system settings|a edits nine.nix" ] \
+  || fail "a committed system change must notify warn"
+commit a ten.nix "{ }"
+run a sync
+run b sync
+[ "$(notes b)" = "warn|dotfiles pulled, reload for system settings|pulled 2 commits, latest: a edits ten.nix" ] \
+  || fail "a pulled system change must notify warn"
+rm -f "$TMP/apply-mode"
+notes a >/dev/null; run a built; run b built
 
 commit a nine.txt "from a"; run a sync
 commit b ten.txt "from b"

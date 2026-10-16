@@ -28,13 +28,14 @@
   ]);
   fonts.fontconfig.enable = true;
 
-  # Pull and push ~/dotfiles every minute (dotsync.sh). Lingering is on for
-  # this user, so the timer runs without a login.
+  # Pull, push and apply ~/dotfiles every minute (dotsync.sh). Lingering is on
+  # for this user, so the timer runs without a login. The profile path keeps
+  # the unit unchanged when dotsync changes, as on the Mac.
   systemd.user.services.dotsync = {
     Unit.Description = "Sync ~/dotfiles with GitHub";
     Service = {
       Type = "oneshot";
-      ExecStart = "${import ./dotsync.nix { inherit pkgs; }}/bin/dotsync sync";
+      ExecStart = "${config.home.profileDirectory}/bin/dotsync sync";
     };
   };
   systemd.user.timers.dotsync = {

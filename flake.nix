@@ -49,22 +49,22 @@
         modules = [
           ./configuration.nix
           nix-homebrew.darwinModules.nix-homebrew
-          home-manager.darwinModules.home-manager
-          {
-            home-manager.useGlobalPkgs = true;
-            home-manager.useUserPackages = true;
-            home-manager.extraSpecialArgs = { inherit user skillInputs mattSkills; };
-            home-manager.users.${user} = import ./home-darwin.nix;
-            # Pre-existing files at a managed path (e.g. from before this repo took over,
-            # or a background daemon recreating its config dir) get renamed instead of
-            # blocking activation.
-            home-manager.backupFileExtension = "hm-backup";
-          }
         ];
       };
 
-      # Standalone home-manager for a Linux machine: the user-level half of the
-      # setup above, with no system layer. Applied by rebuild.sh.
+      # Home Manager runs standalone on both OSes, not inside nix-darwin, so
+      # applying user-level changes needs no sudo and dotsync can do it on its
+      # own. Only darwinConfigurations above needs `sudo darwin-rebuild`.
+      # Applied by rebuild.sh.
+      homeConfigurations."mac" = home-manager.lib.homeManagerConfiguration {
+        pkgs = import nixpkgs {
+          system = "aarch64-darwin";
+          config.allowUnfree = true;
+        };
+        extraSpecialArgs = { inherit user skillInputs mattSkills; };
+        modules = [ ./home-darwin.nix ];
+      };
+
       homeConfigurations."linux" = home-manager.lib.homeManagerConfiguration {
         pkgs = nixpkgs.legacyPackages.x86_64-linux;
         extraSpecialArgs = {

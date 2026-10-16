@@ -36,6 +36,7 @@ in
     jq        # json on the command line
     lazygit
     neovim
+    flock     # one rebuild.sh at a time
   ]
   # agent tooling firstmate needs on PATH
   ++ import ./firstmate-tools.nix { inherit pkgs; }

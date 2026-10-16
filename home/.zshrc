@@ -1,6 +1,6 @@
 # Editable shell configuration. Packages and plugin paths are managed in home.nix.
 typeset -U path cdpath fpath manpath
-path=("/etc/profiles/per-user/$USER/bin" /opt/homebrew/bin $path)
+path=("$HOME/.nix-profile/bin" /opt/homebrew/bin $path)
 for profile in ${(z)NIX_PROFILES}; do
   fpath+=($profile/share/zsh/site-functions $profile/share/zsh/$ZSH_VERSION/functions $profile/share/zsh/vendor-completions)
 done
