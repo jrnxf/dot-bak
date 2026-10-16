@@ -11,12 +11,6 @@ workspace_picker = "prefix+w"
 goto             = "prefix+g"
 copy_mode  = "prefix+y"  # herdr's copy-mode entry key; copy-mode's own internal keys (v/space select, y/Enter copy, q/Esc cancel) aren't configurable
 
-[[keys.command]]
-key = "prefix+shift+b"
-type = "plugin_action"
-command = "herdr-firstmate-flow.open-captain-deck"
-description = "Open Captain's Deck board"
-
 [ui]
 # Agents panel order: explicit choice of "spaces" (grouped by space, the default) over "priority".
 agent_panel_sort = "spaces"

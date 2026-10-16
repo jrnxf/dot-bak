@@ -79,18 +79,14 @@ in
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/nvim";
   home.file.".config/herdr".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/herdr";
-  # The same config with a tinted sidebar and Firstmate's working directory,
-  # for the Firstmate machine: home-linux.nix makes it that machine's config.
-  # The tint shows when herdr itself runs there (over plain ssh); a Mac that
-  # reaches it as a saved machine draws the UI with its own theme. herdr has
-  # no include, only HERDR_CONFIG_PATH for a whole file, so this is generated
-  # from the tracked config rather than copied; it follows edits to that file
-  # at the next rebuild.
+  # The same config with Firstmate's working directory, for the Firstmate
+  # machine: home-linux.nix makes it that machine's config. herdr has no
+  # include and no per-machine setting, only HERDR_CONFIG_PATH for a whole
+  # file, so this is generated from the tracked config rather than copied; it
+  # follows edits to that file at the next rebuild.
   home.file.".config/herdr-firstmate/config.toml".source =
     (pkgs.formats.toml { }).generate "herdr-firstmate-config.toml" (
       lib.recursiveUpdate (fromTOML (builtins.readFile ./home/.config/herdr/config.toml)) {
-        # dark teal: text contrast stays within 5% of the default sidebar's
-        theme.custom.sidebar_bg = "#12262b";
         # New workspaces, tabs and panes on the Firstmate machine open in
         # ~/firstmate instead of following the pane they came from. herdr
         # resolves this on the server, so it is the Linux machine's path.

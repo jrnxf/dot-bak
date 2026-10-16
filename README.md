@@ -135,39 +135,17 @@ The Linux machine hosts [Firstmate](https://github.com/kunchenguid/firstmate) at
 Save it once on each Mac with `herdr machine add firstmate`, then plain `herdr` shows that machine in the sidebar beside Local, in one window.
 herdr runs on the Mac and draws the UI; the herdr server on the Linux machine owns the panes and the agents in them, so they keep running when the Mac disconnects.
 It expects a `firstmate` entry in your own `~/.ssh/config`, which is not in this repo.
-From a phone, or anywhere without herdr, `ssh firstmate` and run `herdr` there.
+Anywhere without herdr, `ssh firstmate` and run `herdr` there.
 There is no `fm` command any more: it opened a second, standalone herdr attached to that machine alone, which the saved machine made redundant.
-
-[Captain's Deck](https://github.com/deimantasnork/captains-deck) draws Firstmate's flow as a kanban board inside herdr.
-It is a herdr plugin, and herdr runs a plugin on the machine that owns the panes, so it is installed on the Linux machine only: the Mac reaches it through the saved machine and needs nothing.
-`home-linux.nix` pins it to a commit and registers it, enabled, on every rebuild with `herdr plugin link`; herdr keeps its plugin registry in `~/.config/herdr/plugins.json`, which is gitignored.
-Open the board from any pane on the Linux machine with `prefix+shift+b` (bound to `herdr plugin action invoke herdr-firstmate-flow.open-captain-deck`), or `herdr-firstmate-flow.open-flow` for an overlay; no key is bound to open-flow.
-The plugin needs the Linux machine's system `python3`, which this repo does not install, and finds `~/firstmate` by default.
-It reads Firstmate's state and writes only an answer you queue from a Captain's Call card, through Firstmate's own scripts.
-Upstream publishes no releases, so a new version is a `rev` and `hash` bump in `home-linux.nix`, which also applies a patch from `patches/`; the comment there says when to drop it.
-
-[Moshi](https://getmoshi.app) is the phone's terminal for it.
-`home-linux.nix` installs its host half, `moshi-hook`, and runs the daemon as the user service `moshi-hook.service`.
-Pair a phone once, on the Linux machine, with `moshi-hook host setup --host <address> --port <port>`, then scan the QR it prints and run `systemctl --user restart moshi-hook` so the daemon picks up the pairing.
-Give it the address and SSH port the phone reaches the machine at: left alone it offers the machine's own addresses, which are no use when the machine sits behind a forward.
-The package is pinned, and `moshi-hook update` cannot write to the Nix store, so a new release is a version and hash bump in `home-linux.nix`.
-`moshi-hook install` is not part of this: it writes hook entries into `~/.claude/settings.json`, `~/.codex/hooks.json` and `~/.pi/agent/extensions/`, which are tracked files this repo shares with the Mac, where `moshi-hook` is not installed.
 
 An interactive login shell on the Linux machine starts in `~/firstmate` when that directory exists.
 Only a login shell still sitting in `$HOME` moves: commands run over ssh, `scp` and `rsync` are unaffected, and shells opened inside a herdr pane or a tmux window keep the directory they were given.
 The Mac's login directory does not change.
 
-Herdr says which machine a session is on in two ways:
+The right edge of herdr's tab bar shows the hostname, on both machines.
+Herdr resolves it where the panes run, so a remote attach names the remote machine.
 
-- The right edge of the tab bar shows the hostname, on both machines.
-  Herdr resolves it where the panes run, so a remote attach names the remote machine.
-- The sidebar is tinted dark teal when herdr itself runs on the Linux machine.
-  Herdr takes its theme from the client's config and has no include, so `home.nix` generates `~/.config/herdr-firstmate/config.toml` from the tracked config plus that one colour.
-  `home-linux.nix` points `HERDR_CONFIG_PATH` at it for every herdr started on the Linux machine, which is what draws the UI when you ssh in and run herdr there.
-  The Mac's own herdr, where Firstmate is a saved machine, draws everything with the Mac's theme, and the machine label in the sidebar tells the two apart.
-  The generated file follows edits to `home/.config/herdr/config.toml` at the next rebuild, and is read-only, so herdr's reset-keys action cannot rewrite it.
-
-The same generated file sets `terminal.new_cwd = "~/firstmate"`, so every new workspace, tab and pane on the Linux machine opens in `~/firstmate` rather than following the pane it came from.
+`home.nix` generates `~/.config/herdr-firstmate/config.toml` from the tracked config plus `terminal.new_cwd = "~/firstmate"`, and `home-linux.nix` points `HERDR_CONFIG_PATH` at it for every herdr on the Linux machine, so every new workspace, tab and pane on the Linux machine opens in `~/firstmate` rather than following the pane it came from.
 Herdr resolves that on the server, so the Mac's own herdr sessions keep the default.
 
 ## Make it yours
