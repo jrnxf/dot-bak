@@ -153,7 +153,7 @@ Every machine with this repo keeps `~/dotfiles` in step with GitHub on its own, 
 - It never merges, stashes or force-pushes.
   When it can't sync cleanly, such as an uncommitted edit to a file that changed upstream or two commits that conflict, it leaves the repo alone and reports why.
 
-The prompt shows a `dotfiles` marker only when something needs attention:
+`dotsync status` prints a `dotfiles` line only when something needs attention:
 
 - `*`: uncommitted changes, the one thing that does not sync.
 - `⇡`: commits not pushed yet.

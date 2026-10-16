@@ -4,7 +4,7 @@
 #   dotsync sync    fetch; fast-forward, or rebase local commits when the tree
 #                   is clean; push what is ahead. Run every minute by a timer
 #                   and after every commit by the repo's post-commit hook.
-#   dotsync status  one short line for the prompt, empty when all is well:
+#   dotsync status  one short line, empty when all is well:
 #                   * uncommitted, ⇡ unpushed, ! last sync failed (the reason is
 #                   in `dotsync why`), reload when nix-applied files changed
 #                   since the last rebuild.
