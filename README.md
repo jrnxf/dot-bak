@@ -178,11 +178,11 @@ Every machine with this repo keeps `~/dotfiles` in step with GitHub on its own, 
 
 On a Mac, a sync that pulls commits or leaves a system change waiting also shows a HUD at the bottom of the screen with a sound, and so does a sync that fails in a new way:
 
-- Green with Glass: `dotfiles synced and reloaded`. This machine now has exactly what GitHub has, all of it applied.
-- Amber with Purr: `dotfiles pulled, reload for system settings`, or `dotfiles applied, ...` for a local commit. The home config is applied; the system config waits for `reload`.
+- Green with Glass: `dotfiles synced`, or `dotfiles synced and rebuilt` when the sync also ran a rebuild. This machine now has exactly what GitHub has, all of it applied.
+- Amber with Purr: `dotfiles synced, run reload`. The home config is applied; the system config waits for `reload`.
 - Red with Basso: `dotfiles sync failed`, with the reason. Each failure shows once, not every minute, and a fetch that fails because the machine is offline shows nothing.
 
-The detail line names the commits pulled. `dotsync-hud.js` draws it through the `osascript` that ships with macOS; Linux shows nothing.
+The detail line is the commit subject, with a count when several commits came in. `dotsync-hud.js` draws it through the `osascript` that ships with macOS; Linux shows nothing.
 
 Uncommitted work stays on the machine it was made on, so commit to share.
 On Linux the clone uses https, and `gh auth git-credential` signs in for it from the `gh auth login` you already ran.

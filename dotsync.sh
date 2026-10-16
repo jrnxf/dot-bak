@@ -52,9 +52,9 @@ pulled_summary() {
   n=$(git rev-list --count "$1..$2")
   subject=$(git log -1 --format=%s "$2")
   if [ "$n" -eq 1 ]; then
-    printf 'pulled 1 commit: %s' "$subject"
+    printf '%s' "$subject"
   else
-    printf 'pulled %s commits, latest: %s' "$n" "$subject"
+    printf '%s commits, latest: %s' "$n" "$subject"
   fi
 }
 
@@ -148,28 +148,35 @@ sync() {
   if [ "$ahead" -gt 0 ]; then
     git push --quiet 2>/dev/null || fail "push failed"
   fi
-  local applied=""
+  local applied="" rebuilt=""
   if rebuild_pending; then
     applied=$(apply) || exit 1
+    rebuilt=1
   fi
   rm -f "$state/sync-error"
 
+  # Only a sync that pulled, followed a rewrite or left a system change shows
+  # a HUD. The title says what happened; the detail names the commits.
+  local detail
   if [ -n "$followed" ]; then
-    if [ "$applied" = system ]; then
-      notify warn "dotfiles followed GitHub, reload for system settings" "followed rewritten history on GitHub"
-    else
-      notify ok "dotfiles synced and reloaded" "followed rewritten history on GitHub"
-    fi
+    detail="followed rewritten history"
   elif [ "$behind" -gt 0 ]; then
-    # Claim "synced and reloaded" only when it is checked: this machine has exactly
-    # what GitHub has, all of it applied.
-    if [ "$applied" = system ]; then
-      notify warn "dotfiles pulled, reload for system settings" "$(pulled_summary "$old" "$up")"
-    elif [ "$(git rev-parse HEAD)" = "$(git rev-parse '@{u}')" ]; then
-      notify ok "dotfiles synced and reloaded" "$(pulled_summary "$old" "$up")"
-    fi
+    detail=$(pulled_summary "$old" "$up")
   elif [ "$applied" = system ]; then
-    notify warn "dotfiles applied, reload for system settings" "$(git log -1 --format=%s)"
+    detail=$(git log -1 --format=%s)
+  else
+    return 0
+  fi
+  if [ "$applied" = system ]; then
+    notify warn "dotfiles synced, run reload" "$detail"
+  # Claim a clean sync only when it is checked: this machine has exactly what
+  # GitHub has, all of it applied.
+  elif [ "$(git rev-parse HEAD)" = "$(git rev-parse '@{u}')" ]; then
+    if [ -n "$rebuilt" ]; then
+      notify ok "dotfiles synced and rebuilt" "$detail"
+    else
+      notify ok "dotfiles synced" "$detail"
+    fi
   fi
 }
 

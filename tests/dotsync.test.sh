@@ -173,24 +173,24 @@ commit a six.txt "from a"
 run a sync
 [ -z "$(notes a)" ] || fail "a sync that only pushes must not notify"
 run b sync
-[ "$(notes b)" = "ok|dotfiles synced and reloaded|pulled 1 commit: a edits six.txt" ] || fail "a live-linked pull must notify ok with its subject"
+[ "$(notes b)" = "ok|dotfiles synced|a edits six.txt" ] || fail "a live-linked pull must notify ok with its subject"
 run b built
 
 commit a seven.txt "1"; commit a eight.nix "{ }"
 run a sync
 run b sync
-[ "$(notes b)" = "ok|dotfiles synced and reloaded|pulled 2 commits, latest: a edits eight.nix" ] \
+[ "$(notes b)" = "ok|dotfiles synced and rebuilt|2 commits, latest: a edits eight.nix" ] \
   || fail "a pull applied in full must notify ok"
 
 echo system >"$TMP/apply-mode"
 commit a nine.nix "{ }"
 run a sync
-[ "$(notes a)" = "warn|dotfiles applied, reload for system settings|a edits nine.nix" ] \
+[ "$(notes a)" = "warn|dotfiles synced, run reload|a edits nine.nix" ] \
   || fail "a committed system change must notify warn"
 commit a ten.nix "{ }"
 run a sync
 run b sync
-[ "$(notes b)" = "warn|dotfiles pulled, reload for system settings|pulled 2 commits, latest: a edits ten.nix" ] \
+[ "$(notes b)" = "warn|dotfiles synced, run reload|2 commits, latest: a edits ten.nix" ] \
   || fail "a pulled system change must notify warn"
 rm -f "$TMP/apply-mode"
 notes a >/dev/null; run a built; run b built
@@ -198,7 +198,7 @@ notes a >/dev/null; run a built; run b built
 commit a nine.txt "from a"; run a sync
 commit b ten.txt "from b"
 run b sync
-[ "$(notes b)" = "ok|dotfiles synced and reloaded|pulled 1 commit: a edits nine.txt" ] \
+[ "$(notes b)" = "ok|dotfiles synced|a edits nine.txt" ] \
   || fail "after a rebase, only the upstream commits count as pulled"
 run a sync; notes a >/dev/null
 
@@ -237,7 +237,7 @@ want=$(git -C "$TMP/origin.git" rev-parse main)
 run b sync || fail "a rewrite with no local commits should be followed"
 [ "$(head_of b)" = "$want" ] || fail "a machine with no commits of its own must end at the new upstream"
 [ "$(git -C "$TMP/origin.git" rev-parse main)" = "$want" ] || fail "following a rewrite must push nothing"
-[ "$(notes b)" = "ok|dotfiles synced and reloaded|followed rewritten history on GitHub" ] || fail "following a rewrite must notify ok"
+[ "$(notes b)" = "ok|dotfiles synced|followed rewritten history" ] || fail "following a rewrite must notify ok"
 assert_not_contains "$(run b status)" "!" "following a rewrite must not fail"
 run a sync || fail "the machine that made the dropped commit should follow too"
 [ "$(head_of a)" = "$want" ] || fail "every machine must end at the rewritten upstream"
