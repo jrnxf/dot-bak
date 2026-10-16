@@ -158,6 +158,8 @@ Every machine with this repo keeps `~/dotfiles` in step with GitHub on its own, 
   `home/.gitconfig` turns on `.githooks/` for this repo only.
 - A launchd agent on the Mac and a systemd user timer on Linux run `dotsync sync` at the top of every minute, so all machines sync together.
   It fast-forwards to upstream, rebases local commits onto it when the tree is clean, and pushes anything ahead.
+  If GitHub's history was rewritten and the machine has no commits of its own, it follows GitHub with `git reset --keep`, which never touches uncommitted work, instead of pushing the old commits back.
+  It never force-pushes.
 - When a pulled or committed change needs a rebuild, the same sync applies it with `rebuild.sh --auto`.
   That applies the home config as committed, never uncommitted edits, and never asks for sudo.
   A change to the system config still waits for you to run `reload`.

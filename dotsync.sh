@@ -2,9 +2,10 @@
 # Keeps ~/dotfiles in step across machines (README, "Syncing machines").
 #
 #   dotsync sync    fetch; fast-forward, or rebase local commits when the tree
-#                   is clean; push what is ahead; then, when a pulled or
-#                   committed change needs a rebuild, apply it with
-#                   `rebuild.sh --auto`. Run every minute by a timer and after
+#                   is clean, or follow a history GitHub rewrote when there
+#                   are no local commits to keep; push what is ahead; then,
+#                   when a pulled or committed change needs a rebuild, apply
+#                   it with `rebuild.sh --auto`. Run every minute by a timer and after
 #                   every commit by the repo's post-commit hook.
 #   dotsync status  one short line, empty when all is well:
 #                   * uncommitted, ⇡ unpushed, ! last sync failed (the reason is
@@ -18,7 +19,9 @@
 # nothing is shown.
 #
 # It never merges, stashes or force-pushes: anything it cannot do cleanly is
-# left alone and reported.
+# left alone and reported. When GitHub's history was rewritten and this machine
+# has no commits of its own, it moves to the new history with `git reset
+# --keep`, which refuses rather than touch uncommitted work.
 set -uo pipefail
 
 repo=${DOTSYNC_REPO:-$HOME/dotfiles}
@@ -103,17 +106,31 @@ sync() {
   git symbolic-ref -q HEAD >/dev/null || return 0
   git rev-parse -q --verify '@{u}' >/dev/null || return 0
 
+  # Upstream as of the last fetch, to tell a rewrite from new commits.
+  local old_up
+  old_up=$(git rev-parse -q --verify '@{u}')
+
   # No HUD for this one: a laptop without a network fails it all the time.
   if ! git fetch --quiet; then
     printf '%s\n' "fetch failed" >"$state/sync-error"
     exit 1
   fi
 
-  local ahead behind old up
+  local ahead behind old up followed=""
   old=$(git rev-parse HEAD)
   up=$(git rev-parse '@{u}')
   read -r ahead behind < <(git rev-list --left-right --count 'HEAD...@{u}')
-  if [ "$behind" -gt 0 ]; then
+  # GitHub's history was rewritten and everything here is the old history:
+  # follow it. Rebasing would carry the dropped commits back.
+  if [ "$ahead" -gt 0 ] && [ -n "$old_up" ] &&
+    ! git merge-base --is-ancestor "$old_up" '@{u}' &&
+    git merge-base --is-ancestor HEAD "$old_up"; then
+    git reset --keep --quiet '@{u}' 2>/dev/null ||
+      fail "can't follow rewritten history: uncommitted changes touch files that changed upstream"
+    followed=1
+    ahead=0
+  fi
+  if [ "$behind" -gt 0 ] && [ -z "$followed" ]; then
     if [ "$ahead" -eq 0 ]; then
       # Refuses on its own when an uncommitted file would be overwritten.
       git merge --ff-only --quiet '@{u}' 2>/dev/null ||
@@ -137,7 +154,13 @@ sync() {
   fi
   rm -f "$state/sync-error"
 
-  if [ "$behind" -gt 0 ]; then
+  if [ -n "$followed" ]; then
+    if [ "$applied" = system ]; then
+      notify warn "dotfiles followed GitHub, reload for system settings" "followed rewritten history on GitHub"
+    else
+      notify ok "dotfiles up to date" "followed rewritten history on GitHub"
+    fi
+  elif [ "$behind" -gt 0 ]; then
     # Claim "up to date" only when it is checked: this machine has exactly
     # what GitHub has, all of it applied.
     if [ "$applied" = system ]; then

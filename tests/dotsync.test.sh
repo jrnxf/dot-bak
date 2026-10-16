@@ -217,3 +217,69 @@ run b sync 2>/dev/null && fail "a fetch from a missing remote must fail"
 [ -z "$(notes b)" ] || fail "a fetch failure (offline) must not notify"
 assert_contains "$(run b why)" "fetch failed" "why must still name the fetch failure"
 pass "an offline fetch fails quietly"
+
+# --- rewritten history --------------------------------------------------------------
+
+# rewrite_upstream: force-push origin back to the parent of its newest commit,
+# the way a captain drops test commits from GitHub.
+rewrite_upstream() {
+  git -C "$TMP/a" fetch -q
+  git -C "$TMP/origin.git" update-ref refs/heads/main "$(git -C "$TMP/origin.git" rev-parse main~1)"
+}
+
+git -C "$TMP/b" remote set-url origin "$TMP/origin.git"
+run a sync; run b sync
+git -C "$TMP/a" commit -q --allow-empty -m "test commit"
+run a sync; run b sync
+run a built; run b built; notes b >/dev/null
+rewrite_upstream
+want=$(git -C "$TMP/origin.git" rev-parse main)
+run b sync || fail "a rewrite with no local commits should be followed"
+[ "$(head_of b)" = "$want" ] || fail "a machine with no commits of its own must end at the new upstream"
+[ "$(git -C "$TMP/origin.git" rev-parse main)" = "$want" ] || fail "following a rewrite must push nothing"
+[ "$(notes b)" = "ok|dotfiles up to date|followed rewritten history on GitHub" ] || fail "following a rewrite must notify ok"
+assert_not_contains "$(run b status)" "!" "following a rewrite must not fail"
+run a sync || fail "the machine that made the dropped commit should follow too"
+[ "$(head_of a)" = "$want" ] || fail "every machine must end at the rewritten upstream"
+pass "a rewrite with no local commits is followed, not pushed back"
+
+git -C "$TMP/a" commit -q --allow-empty -m "test commit"
+run a sync; run b sync
+run a built; run b built
+rewrite_upstream
+commit b own.txt "mine"
+run b sync || fail "a rewrite with a local commit should rebase it"
+[ "$(git -C "$TMP/origin.git" rev-parse main)" = "$(head_of b)" ] || fail "the local commit must be pushed"
+[ "$(git -C "$TMP/b" log -1 --format=%s)" = "b edits own.txt" ] || fail "the local commit must be kept"
+git -C "$TMP/origin.git" merge-base --is-ancestor "$want" main || fail "the push must never discard upstream history"
+run a sync; run a built; run b built
+pass "a rewrite with a local commit keeps it and never force-pushes"
+
+# An uncommitted edit to a file the rewrite does not change is kept.
+git -C "$TMP/a" commit -q --allow-empty -m "test commit"
+run a sync; run b sync
+rewrite_upstream
+printf 'wip\n' >>"$TMP/b/one.txt"
+run b sync || fail "an edit to an unrelated file must not block following"
+[ "$(head_of b)" = "$(git -C "$TMP/origin.git" rev-parse main)" ] || fail "following must end at the new upstream"
+grep -q wip "$TMP/b/one.txt" || fail "following a rewrite must keep uncommitted work"
+git -C "$TMP/b" checkout -q one.txt
+run a sync; run a built; run b built
+
+# An uncommitted edit to a file the rewrite changes makes it refuse cleanly.
+commit a rewritten.txt "v1"
+run a sync; run b sync
+commit a rewritten.txt "v2"
+run a sync; run b sync
+printf 'wip\n' >"$TMP/b/rewritten.txt"
+before=$(head_of b)
+rewrite_upstream
+git -C "$TMP/origin.git" update-ref refs/heads/main "$(git -C "$TMP/origin.git" rev-parse main~1)"
+run b sync 2>/dev/null && fail "following over an edited file must fail"
+[ "$(head_of b)" = "$before" ] || fail "a refused follow must leave HEAD alone"
+[ "$(cat "$TMP/b/rewritten.txt")" = wip ] || fail "a refused follow must leave the edited file alone"
+assert_contains "$(run b why)" "rewritten history" "why must explain the refusal"
+git -C "$TMP/b" checkout -q rewritten.txt 2>/dev/null || rm -f "$TMP/b/rewritten.txt"
+run b sync || fail "following must succeed once the edit is gone"
+[ "$(head_of b)" = "$(git -C "$TMP/origin.git" rev-parse main)" ] || fail "following must end at the new upstream"
+pass "uncommitted work survives a rewrite, or the follow is refused"
