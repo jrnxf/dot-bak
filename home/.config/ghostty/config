@@ -12,7 +12,6 @@ keybind = ctrl+a>n=new_window
 keybind = ctrl+a>h=goto_split:left
 keybind = ctrl+a>l=goto_split:right
 keybind = ctrl+a>space=equalize_splits
-keybind = ctrl+enter=clear_screen
 keybind = global:cmd+grave_accent=toggle_quick_terminal
 keybind = ctrl+a>t=close_surface
 macos-icon = custom-style
