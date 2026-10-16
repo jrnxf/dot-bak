@@ -30,7 +30,7 @@ fail() {
 # Paths whose changes only land after `reload`. Everything else under home/ is
 # a live link (mkOutOfStoreSymlink) and applies the moment it is pulled.
 needs_rebuild() {
-  grep -qE '\.nix$|^flake\.lock$|^[^/]+\.sh$|^home/firstmate/|^home/\.agents/|^home/\.config/herdr/config\.toml$'
+  grep -qE '\.nix$|^flake\.lock$|^[^/]+\.sh$|^home/firstmate/|^home/\.agents/'
 }
 
 sync() {

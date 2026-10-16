@@ -28,13 +28,6 @@
   ]);
   fonts.fontconfig.enable = true;
 
-  # This machine hosts Firstmate, so every herdr started here uses the config
-  # home.nix generates for it (Firstmate's working directory). herdr's
-  # sockets, logs and session state stay in ~/.config/herdr; only the config
-  # file moves.
-  home.sessionVariables.HERDR_CONFIG_PATH =
-    "${config.home.homeDirectory}/.config/herdr-firstmate/config.toml";
-
   # Pull and push ~/dotfiles every minute (dotsync.sh). Lingering is on for
   # this user, so the timer runs without a login.
   systemd.user.services.dotsync = {

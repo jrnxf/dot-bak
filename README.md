@@ -138,15 +138,8 @@ It expects a `devbox` entry in your own `~/.ssh/config`, which is not in this re
 Anywhere without herdr, `ssh devbox` and run `herdr` there.
 There is no `fm` command any more: it opened a second, standalone herdr attached to that machine alone, which the saved machine made redundant.
 
-An interactive login shell on the Linux machine starts in `~/firstmate` when that directory exists.
-Only a login shell still sitting in `$HOME` moves: commands run over ssh, `scp` and `rsync` are unaffected, and shells opened inside a herdr pane or a tmux window keep the directory they were given.
-The Mac's login directory does not change.
-
 The right edge of herdr's tab bar shows the hostname, on both machines.
 Herdr resolves it where the panes run, so a remote attach names the remote machine.
-
-`home.nix` generates `~/.config/herdr-firstmate/config.toml` from the tracked config plus `terminal.new_cwd = "~/firstmate"`, and `home-linux.nix` points `HERDR_CONFIG_PATH` at it for every herdr on the Linux machine, so every new workspace, tab and pane on the Linux machine opens in `~/firstmate` rather than following the pane it came from.
-Herdr resolves that on the server, so the Mac's own herdr sessions keep the default.
 
 ## Syncing machines
 

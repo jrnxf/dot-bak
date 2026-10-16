@@ -211,13 +211,6 @@ ssh() {
   fi
 }
 
-# Logging in to the Linux machine lands in Firstmate. Only a login shell still
-# sitting in $HOME moves: commands run over ssh, scp and rsync never read this
-# file, and herdr panes and tmux windows keep the directory they were given.
-if [[ $OSTYPE == linux* && -o login && $PWD == $HOME && -d ~/firstmate && -z $TMUX && -z $HERDR_ENV ]]; then
-  cd ~/firstmate
-fi
-
 # ---- Tool initialization ----
 [[ $commands[kubectl] ]] && source <(kubectl completion zsh)
 [[ $commands[thefuck] ]] && eval "$(thefuck --alias)"

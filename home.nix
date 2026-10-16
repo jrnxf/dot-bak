@@ -82,23 +82,8 @@ in
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/nvim";
   home.file.".config/herdr".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/herdr";
-  # The same config with Firstmate's working directory, for the Firstmate
-  # machine: home-linux.nix makes it that machine's config. herdr has no
-  # include and no per-machine setting, only HERDR_CONFIG_PATH for a whole
-  # file, so this is generated from the tracked config rather than copied; it
-  # follows edits to that file at the next rebuild.
-  home.file.".config/herdr-firstmate/config.toml".source =
-    (pkgs.formats.toml { }).generate "herdr-firstmate-config.toml" (
-      lib.recursiveUpdate (fromTOML (builtins.readFile ./home/.config/herdr/config.toml)) {
-        # New workspaces, tabs and panes on the Firstmate machine open in
-        # ~/firstmate instead of following the pane they came from. herdr
-        # resolves this on the server, so it is the Linux machine's path.
-        terminal.new_cwd = "~/firstmate";
-      }
-    );
   # Firstmate's model and effort choices per task, kept here so every machine
-  # that runs Firstmate dispatches the same way and the Linux guest, which has
-  # no backup, keeps them.
+  # that runs Firstmate dispatches the same way.
   home.file."firstmate/config/crew-dispatch.json".source =
     ./home/firstmate/crew-dispatch.json;
   home.file.".claude/settings.json".source =
