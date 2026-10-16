@@ -60,4 +60,16 @@ in
   # automatic_backups/) ends up in the repo dir too and is gitignored.
   home.file.".config/karabiner".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/karabiner";
+
+  # Pull and push ~/dotfiles every minute (dotsync.sh).
+  launchd.agents.dotsync = {
+    enable = true;
+    config = {
+      ProgramArguments = [ "${import ./dotsync.nix { inherit pkgs; }}/bin/dotsync" "sync" ];
+      StartInterval = 60;
+      RunAtLoad = true;
+      ProcessType = "Background";
+      StandardErrorPath = "${config.xdg.stateHome}/dotfiles/sync.log";
+    };
+  };
 }

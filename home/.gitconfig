@@ -28,3 +28,9 @@
 	prompt = false
 [push]
 	autoSetupRemote = true
+[credential "https://github.com"]
+	# The Linux machine clones over https; on the Mac the remote is ssh and this is unused.
+	helper =
+	helper = !gh auth git-credential
+[includeIf "gitdir:~/dotfiles/"]
+	path = ~/dotfiles/.githooks/gitconfig

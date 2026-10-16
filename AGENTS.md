@@ -9,6 +9,10 @@ Deliberate decisions in this repo - do NOT silently revert them:
 
 Use Nix for installation and symlinked files under `home/` for editable application configuration, including Zsh, Starship, fzf setup, and Codex. Prefer this over generated read-only configs or custom activation scripts. `home.nix` declares the packages and links every machine shares, `home-darwin.nix` and `home-linux.nix` add the per-OS ones, and `configuration.nix` manages macOS system settings. `reload` runs `rebuild.sh` and restarts Zsh. Preserve shell integrations when migrating settings, keep credentials and session data out of the repo, and verify that apps preserve file symlinks when saving. Keep Codex's global YOLO defaults in `home/.codex/config.toml`. Agent skills are declared in `agent-skills.nix` (authored ones under `home/.agents/skills/`, third-party ones as pinned flake inputs), never installed with `npx skills add`.
 
+## Syncing
+
+Every machine runs `dotsync` (README, "Syncing machines"): a commit here is pushed right away, and other machines pull it within a minute. Commit only what is ready to ship to every machine.
+
 ## Maintaining this file
 
 Keep this file for knowledge useful to almost every future agent session in this project.

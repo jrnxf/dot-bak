@@ -5,6 +5,7 @@
 let
   dotfiles = "${config.home.homeDirectory}/dotfiles";
   agentInstructions = "${config.xdg.stateHome}/dotfiles/AGENTS.md";
+  dotsync = import ./dotsync.nix { inherit pkgs; };
   # The prebuilt fzf-tab module has a Zsh version mismatch; use its shell fallback.
   fzfTab = pkgs.runCommand "zsh-fzf-tab-no-module" { } ''
     cp -r ${pkgs.zsh-fzf-tab} $out
@@ -35,7 +36,9 @@ in
   # agent tooling firstmate needs on PATH
   ++ import ./firstmate-tools.nix { inherit pkgs; }
   # markdown renderer behind the Claude Code /mkd mod
-  ++ [ (import ./leaf.nix { inherit pkgs; }) ];
+  ++ [ (import ./leaf.nix { inherit pkgs; }) ]
+  # keeps this repo in step across machines; each OS module runs it on a timer
+  ++ [ dotsync ];
   home.sessionVariables.EDITOR = "nvim";
   # A chrome-devtools-axi bridge and its headless Chrome run until someone
   # calls `chrome-devtools-axi stop`, and agents rarely do: finished workers

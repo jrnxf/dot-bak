@@ -148,6 +148,30 @@ Herdr resolves it where the panes run, so a remote attach names the remote machi
 `home.nix` generates `~/.config/herdr-firstmate/config.toml` from the tracked config plus `terminal.new_cwd = "~/firstmate"`, and `home-linux.nix` points `HERDR_CONFIG_PATH` at it for every herdr on the Linux machine, so every new workspace, tab and pane on the Linux machine opens in `~/firstmate` rather than following the pane it came from.
 Herdr resolves that on the server, so the Mac's own herdr sessions keep the default.
 
+## Syncing machines
+
+Every machine with this repo keeps `~/dotfiles` in step with GitHub on its own, so a change made on one shows up on the others within a minute.
+`dotsync.sh` does the work:
+
+- A `post-commit` hook pushes each commit as soon as it is made.
+  `home/.gitconfig` turns on `.githooks/` for this repo only.
+- A launchd agent on the Mac and a systemd user timer on Linux run `dotsync sync` every minute.
+  It fast-forwards to upstream, rebases local commits onto it when the tree is clean, and pushes anything ahead.
+- It never merges, stashes or force-pushes.
+  When it can't sync cleanly, such as an uncommitted edit to a file that changed upstream or two commits that conflict, it leaves the repo alone and reports why.
+
+The prompt shows a `dotfiles` marker only when something needs attention:
+
+- `*`: uncommitted changes, the one thing that does not sync.
+- `⇡`: commits not pushed yet.
+- `!`: the last sync failed; `dotsync why` says why.
+- `reload`: a pulled change only takes effect after `reload`.
+  Most of `home/` is live-linked and applies the moment it is pulled.
+  Nix files, the scripts at the root, and the few files Home Manager copies need a rebuild.
+
+Uncommitted work stays on the machine it was made on, so commit to share.
+On Linux the clone uses https, and `gh auth git-credential` signs in for it from the `gh auth login` you already ran.
+
 ## Make it yours
 
 This repo is mine.
@@ -203,6 +227,7 @@ If you don't use it, just remove it from `brews` in your copy.
 - `rebuild.sh` - re-applies the config after the first switch, on either OS.
   Run this after changing Nix declarations or adding managed links.
 - `work-overlays.sh` - applies the machine-local overlays described below on every switch.
+- `dotsync.sh`, `dotsync.nix`, `.githooks/` - keep every machine's clone in step with GitHub; see "Syncing machines".
 - `home/` - the actual config files that get symlinked into place; the sections below explain the shared symlink model and Pi's narrower selective setup.
 
 ## How the symlinks work

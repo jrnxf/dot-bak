@@ -34,4 +34,22 @@
   # file moves.
   home.sessionVariables.HERDR_CONFIG_PATH =
     "${config.home.homeDirectory}/.config/herdr-firstmate/config.toml";
+
+  # Pull and push ~/dotfiles every minute (dotsync.sh). Lingering is on for
+  # this user, so the timer runs without a login.
+  systemd.user.services.dotsync = {
+    Unit.Description = "Sync ~/dotfiles with GitHub";
+    Service = {
+      Type = "oneshot";
+      ExecStart = "${import ./dotsync.nix { inherit pkgs; }}/bin/dotsync sync";
+    };
+  };
+  systemd.user.timers.dotsync = {
+    Unit.Description = "Sync ~/dotfiles with GitHub every minute";
+    Timer = {
+      OnBootSec = "1min";
+      OnUnitActiveSec = "1min";
+    };
+    Install.WantedBy = [ "timers.target" ];
+  };
 }

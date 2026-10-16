@@ -1,0 +1,6 @@
+#!/bin/sh
+# Push each commit right away so the other machines pull it within a minute
+# (dotsync.sh). Detached, so committing never waits on the network.
+command -v dotsync >/dev/null || exit 0
+# Mid-rebase commits are not done yet; dotsync skips those on its own too.
+nohup dotsync sync >/dev/null 2>&1 &

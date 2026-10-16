@@ -1,5 +1,5 @@
 add_newline = false
-format = "$hostname$directory$git_branch$cmd_duration$line_break$character"
+format = "$hostname$directory$git_branch${custom.dotfiles}$cmd_duration$line_break$character"
 
 [hostname]
 ssh_only = true
@@ -12,3 +12,11 @@ error_symbol = "[❯](red)"
 
 [cmd_duration]
 format = "[$duration]($style) "
+
+# Shows only when ~/dotfiles needs attention; see dotsync.sh for the markers.
+[custom.dotfiles]
+command = "dotsync status"
+when = "command -v dotsync"
+shell = ["sh"]
+format = "[$output]($style) "
+style = "yellow"
