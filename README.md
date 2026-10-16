@@ -162,6 +162,14 @@ The prompt shows a `dotfiles` marker only when something needs attention:
   Most of `home/` is live-linked and applies the moment it is pulled.
   Nix files, the scripts at the root, and the few files Home Manager copies need a rebuild.
 
+On a Mac, a sync that pulls commits also shows a HUD at the bottom of the screen with a sound, and so does a sync that fails in a new way:
+
+- Green with Glass: `dotfiles up to date`. This machine now has exactly what GitHub has, and nothing pulled waits on a rebuild.
+- Amber with Purr: `dotfiles pulled, reload to apply`.
+- Red with Basso: `dotfiles sync failed`, with the reason. Each failure shows once, not every minute, and a fetch that fails because the machine is offline shows nothing.
+
+The detail line names the commits pulled. `dotsync-hud.js` draws it through the `osascript` that ships with macOS; Linux shows nothing.
+
 Uncommitted work stays on the machine it was made on, so commit to share.
 On Linux the clone uses https, and `gh auth git-credential` signs in for it from the `gh auth login` you already ran.
 
@@ -220,7 +228,7 @@ If you don't use it, just remove it from `brews` in your copy.
 - `rebuild.sh` - re-applies the config after the first switch, on either OS.
   Run this after changing Nix declarations or adding managed links.
 - `work-overlays.sh` - applies the machine-local overlays described below on every switch.
-- `dotsync.sh`, `dotsync.nix`, `.githooks/` - keep every machine's clone in step with GitHub; see "Syncing machines".
+- `dotsync.sh`, `dotsync.nix`, `dotsync-hud.js`, `.githooks/` - keep every machine's clone in step with GitHub; see "Syncing machines".
 - `home/` - the actual config files that get symlinked into place; the sections below explain the shared symlink model and Pi's narrower selective setup.
 
 ## How the symlinks work

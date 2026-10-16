@@ -27,7 +27,18 @@ git clone -q "$TMP/origin.git" "$TMP/a"
 git clone -q "$TMP/origin.git" "$TMP/b"
 
 # run <clone> <command>: dotsync against that clone with its own state dir.
-run() { DOTSYNC_REPO="$TMP/$1" DOTSYNC_STATE="$TMP/state-$1" "$DOTSYNC" "$2"; }
+# Notifications are recorded to notes-<clone>, one per line, instead of shown.
+cat >"$TMP/notify" <<'SH'
+#!/bin/sh
+printf '%s|%s|%s\n' "$1" "$2" "$3" >>"$NOTES"
+SH
+chmod +x "$TMP/notify"
+run() {
+  NOTES="$TMP/notes-$1" DOTSYNC_NOTIFY="$TMP/notify" \
+    DOTSYNC_REPO="$TMP/$1" DOTSYNC_STATE="$TMP/state-$1" "$DOTSYNC" "$2"
+}
+# notes <clone>: the notifications since the last call, then forget them.
+notes() { cat "$TMP/notes-$1" 2>/dev/null; rm -f "$TMP/notes-$1"; }
 commit() { # commit <clone> <file> <content>
   printf '%s\n' "$3" >"$TMP/$1/$2"
   git -C "$TMP/$1" add "$2"
@@ -102,3 +113,47 @@ commit a home.nix "{ }"
 run a sync && run b sync
 assert_contains "$(run b status)" "reload" "a pulled .nix change must ask for reload"
 pass "reload shows only for changes that need a rebuild"
+
+# --- notifications ---------------------------------------------------------------
+
+notes a >/dev/null; notes b >/dev/null
+run a built; run b built
+run b sync
+[ -z "$(notes b)" ] || fail "a sync that pulls nothing must not notify"
+
+commit a six.txt "from a"
+run a sync
+[ -z "$(notes a)" ] || fail "a sync that only pushes must not notify"
+run b sync
+[ "$(notes b)" = "ok|dotfiles up to date|pulled 1 commit: a edits six.txt" ] || fail "a live-linked pull must notify ok with its subject"
+run b built
+
+commit a seven.txt "1"; commit a eight.nix "{ }"
+run a sync
+run b sync
+[ "$(notes b)" = "warn|dotfiles pulled, reload to apply|pulled 2 commits, latest: a edits eight.nix" ] \
+  || fail "a pull that needs a rebuild must notify warn"
+run b built
+
+commit a nine.txt "from a"; run a sync
+commit b ten.txt "from b"
+run b sync
+[ "$(notes b)" = "ok|dotfiles up to date|pulled 1 commit: a edits nine.txt" ] \
+  || fail "after a rebase, only the upstream commits count as pulled"
+run a sync; notes a >/dev/null
+
+commit a eleven.txt "from a"; run a sync
+commit b eleven.txt "from b"
+run b sync 2>/dev/null
+assert_contains "$(notes b)" "fail|dotfiles sync failed|local and upstream commits conflict" "a new failure must notify fail"
+run b sync 2>/dev/null
+[ -z "$(notes b)" ] || fail "the same failure must not notify again"
+git -C "$TMP/b" reset -q --hard '@{u}'
+run b sync
+pass "notifications say what a sync did, and each failure once"
+
+git -C "$TMP/b" remote set-url origin "$TMP/missing.git"
+run b sync 2>/dev/null && fail "a fetch from a missing remote must fail"
+[ -z "$(notes b)" ] || fail "a fetch failure (offline) must not notify"
+assert_contains "$(run b why)" "fetch failed" "why must still name the fetch failure"
+pass "an offline fetch fails quietly"

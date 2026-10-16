@@ -11,6 +11,10 @@
 #   dotsync why     why the last sync failed.
 #   dotsync built   record HEAD as applied; rebuild.sh runs it.
 #
+# When a sync pulls commits, or fails in a new way, it runs $DOTSYNC_NOTIFY
+# with <ok|warn|fail> <title> <detail>. On a Mac that is the HUD in
+# dotsync-hud.js (dotsync.nix sets it); elsewhere nothing is shown.
+#
 # It never merges, stashes or force-pushes: anything it cannot do cleanly is
 # left alone and reported.
 set -uo pipefail
@@ -21,16 +25,45 @@ mkdir -p "$state"
 
 git() { command git -C "$repo" "$@"; }
 
+notify() {
+  [ -n "${DOTSYNC_NOTIFY:-}" ] || return 0
+  "$DOTSYNC_NOTIFY" "$@" >/dev/null 2>&1 || true
+}
+
 fail() {
+  # Each failure is shown once, not again every minute until it is fixed.
+  if [ "$(cat "$state/sync-error" 2>/dev/null)" != "$*" ]; then
+    notify fail "dotfiles sync failed" "$*"
+  fi
   printf '%s\n' "$*" >"$state/sync-error"
   printf 'dotsync: %s\n' "$*" >&2
   exit 1
 }
 
+# pulled_summary <old head> <fetched upstream>: what a sync brought in.
+pulled_summary() {
+  local n subject
+  n=$(git rev-list --count "$1..$2")
+  subject=$(git log -1 --format=%s "$2")
+  if [ "$n" -eq 1 ]; then
+    printf 'pulled 1 commit: %s' "$subject"
+  else
+    printf 'pulled %s commits, latest: %s' "$n" "$subject"
+  fi
+}
+
+# rebuild_pending: true when pulled changes only apply after `reload`.
+rebuild_pending() {
+  local built
+  built=$(cat "$state/built" 2>/dev/null)
+  [ "$built" != "$(git rev-parse HEAD)" ] || return 1
+  [ -z "$built" ] || git diff --name-only "$built" HEAD 2>/dev/null | needs_rebuild
+}
+
 # Paths whose changes only land after `reload`. Everything else under home/ is
 # a live link (mkOutOfStoreSymlink) and applies the moment it is pulled.
 needs_rebuild() {
-  grep -qE '\.nix$|^flake\.lock$|^[^/]+\.sh$|^home/firstmate/|^home/\.agents/'
+  grep -qE '\.nix$|^flake\.lock$|^[^/]+\.(sh|js)$|^home/firstmate/|^home/\.agents/'
 }
 
 sync() {
@@ -43,9 +76,15 @@ sync() {
   git symbolic-ref -q HEAD >/dev/null || return 0
   git rev-parse -q --verify '@{u}' >/dev/null || return 0
 
-  git fetch --quiet || fail "fetch failed"
+  # No HUD for this one: a laptop without a network fails it all the time.
+  if ! git fetch --quiet; then
+    printf '%s\n' "fetch failed" >"$state/sync-error"
+    exit 1
+  fi
 
-  local ahead behind
+  local ahead behind old up
+  old=$(git rev-parse HEAD)
+  up=$(git rev-parse '@{u}')
   read -r ahead behind < <(git rev-list --left-right --count 'HEAD...@{u}')
   if [ "$behind" -gt 0 ]; then
     if [ "$ahead" -eq 0 ]; then
@@ -66,20 +105,25 @@ sync() {
     git push --quiet 2>/dev/null || fail "push failed"
   fi
   rm -f "$state/sync-error"
+
+  if [ "$behind" -gt 0 ]; then
+    # Claim "up to date" only when it is checked: this machine has exactly
+    # what GitHub has, and nothing pulled waits on a rebuild.
+    if rebuild_pending; then
+      notify warn "dotfiles pulled, reload to apply" "$(pulled_summary "$old" "$up")"
+    elif [ "$(git rev-parse HEAD)" = "$(git rev-parse '@{u}')" ]; then
+      notify ok "dotfiles up to date" "$(pulled_summary "$old" "$up")"
+    fi
+  fi
 }
 
 status() {
-  local out="" porcelain built
+  local out="" porcelain
   porcelain=$(git status --porcelain=v2 --branch 2>/dev/null) || return 0
   grep -q '^[^#]' <<<"$porcelain" && out+="*"
   grep -qE '^# branch\.ab \+[1-9]' <<<"$porcelain" && out+="⇡"
   [ -e "$state/sync-error" ] && out+="!"
-  built=$(cat "$state/built" 2>/dev/null)
-  if [ "$built" != "$(git rev-parse HEAD)" ]; then
-    if [ -z "$built" ] || git diff --name-only "$built" HEAD 2>/dev/null | needs_rebuild; then
-      out+="${out:+ }reload"
-    fi
-  fi
+  rebuild_pending && out+="${out:+ }reload"
   [ -n "$out" ] && printf 'dotfiles %s\n' "$out"
   return 0
 }
