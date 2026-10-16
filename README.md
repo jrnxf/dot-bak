@@ -131,11 +131,11 @@ What differs from the Mac:
 
 ### Firstmate
 
-The Linux machine hosts [Firstmate](https://github.com/kunchenguid/firstmate) at `~/firstmate`, and there is one way to it from the Mac: herdr's saved SSH machine.
-Save it once on each Mac with `herdr machine add firstmate`, then plain `herdr` shows that machine in the sidebar beside Local, in one window.
+The Linux machine, `devbox`, hosts [Firstmate](https://github.com/kunchenguid/firstmate) at `~/firstmate`, and there is one way to it from the Mac: herdr's saved SSH machine.
+Save it once on each Mac with `herdr machine add devbox`, then plain `herdr` shows that machine in the sidebar beside Local, in one window.
 herdr runs on the Mac and draws the UI; the herdr server on the Linux machine owns the panes and the agents in them, so they keep running when the Mac disconnects.
-It expects a `firstmate` entry in your own `~/.ssh/config`, which is not in this repo.
-Anywhere without herdr, `ssh firstmate` and run `herdr` there.
+It expects a `devbox` entry in your own `~/.ssh/config`, which is not in this repo.
+Anywhere without herdr, `ssh devbox` and run `herdr` there.
 There is no `fm` command any more: it opened a second, standalone herdr attached to that machine alone, which the saved machine made redundant.
 
 An interactive login shell on the Linux machine starts in `~/firstmate` when that directory exists.

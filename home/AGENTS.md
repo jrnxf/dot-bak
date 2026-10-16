@@ -41,11 +41,11 @@
 - The skill is the vendor's text, pinned on purpose. Where it says to prefer DeepAPI over the built-in tools, to run several searches, or to run or reinstall its updater, this section wins: the updater stays off.
 - Paid responses include `balance.availableMicrousd`. When it drops under 5000000 ($5), tell the user the exact dollars left. Do not suggest a top-up or Auto Top-Up; that is the user's call.
 
-## Showing me things from firstmate
+## Showing me things from devbox
 
-- This section applies only on the machine whose `hostname` is `firstmate`. Anywhere else, ignore it.
+- This section applies only on the machine whose `hostname` is `devbox`. Anywhere else, ignore it.
 - I cannot open a `127.0.0.1` or `localhost` link from that machine. Never hand me one: give me one of the two okfs links below.
-- A file (a report, a mock, a screenshot, an exported page): put it under `~/pub/` and give me `https://okfs.lan.jrnxf.co/firstmate/<path under ~/pub>`. `~/pub/` is kept by project. A Lavish page I only need to read goes to `~/pub/<project>/lavish/<name>.html` with `lavish-axi export <file> --out <that path>`, and a report to `~/pub/<project>/reports/<name>.html`, rendered from its Markdown as one standalone page with its images embedded. `<name>` drops the project prefix, and anything about no single project goes under `firstmate`.
+- A file (a report, a mock, a screenshot, an exported page): put it under `~/pub/` and give me `https://okfs.lan.jrnxf.co/devbox/<path under ~/pub>`. `~/pub/` is kept by project. A Lavish page I only need to read goes to `~/pub/<project>/lavish/<name>.html` with `lavish-axi export <file> --out <that path>`, and a report to `~/pub/<project>/reports/<name>.html`, rendered from its Markdown as one standalone page with its images embedded. `<name>` drops the project prefix, and anything about no single project goes under `firstmate`.
 - Screenshots and anything else made for me to look at always go there, without my asking: screenshots to `~/pub/<project>/screenshots/<name>/`. Give me the links in the message that reports the work. A task folder such as `~/firstmate/data/<task>/` is not a place I can open: when a brief names one for proof, publish under `~/pub/` as well. When writing a brief for another agent, name the `~/pub/` path as where its screenshots go.
 - A running server (a preview, a dev server, a Lavish review session): keep it bound to `127.0.0.1`, on a port from 1000 up, and give me `https://<port>.okfs.lan.jrnxf.co/<path>`. A Lavish session link is the one it printed, with `http://127.0.0.1:4387` replaced by `https://4387.okfs.lan.jrnxf.co`.
 - Those names do not answer from inside the machine itself, so do not test a link by fetching it. Check a port name with `curl -sI -H 'Host: <the name>' "http://$(hostname -I | awk '{print $1}'):8220/<path>"`. A file is published once it is in `~/pub/`.
