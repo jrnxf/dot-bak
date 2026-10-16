@@ -65,14 +65,15 @@ in
   home.file.".config/karabiner".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/karabiner";
 
-  # Pull, push and apply ~/dotfiles every minute (dotsync.sh). The profile
+  # Pull, push and apply ~/dotfiles at the top of every minute (dotsync.sh),
+  # so every machine syncs at the same moment. The profile
   # path, not the store path, keeps the agent unchanged when dotsync changes:
   # an apply that changed it would restart the agent running that apply.
   launchd.agents.dotsync = {
     enable = true;
     config = {
       ProgramArguments = [ "${config.home.profileDirectory}/bin/dotsync" "sync" ];
-      StartInterval = 60;
+      StartCalendarInterval = { };
       RunAtLoad = true;
       ProcessType = "Background";
       StandardErrorPath = "${config.xdg.stateHome}/dotfiles/sync.log";
