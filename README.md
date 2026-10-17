@@ -405,6 +405,26 @@ appended. Do not run `lavish-axi setup hooks`: it rewrites the command to a
 `tests/agent-hooks.test.sh` before committing changes to these files. Codex
 asks to trust `hooks.json` again whenever it changes (`/hooks`).
 
+### Notifications
+
+`home/.claude/hooks/notify.sh` runs on Claude Code's `Stop` and `Notification`
+hooks and replaces the built-in Ghostty channel, which beeped on every finished
+turn of every session, firstmate's workers and its no-op "Captain, shipshape."
+turns included. `preferredNotifChannel` is `notifications_disabled`; the script
+sends the desktop notification (OSC 777) and a bell itself:
+
+- A firstmate worker (`FM_TASK_INBOX` set) never notifies.
+- The firstmate session (cwd under `/Users/jrnxf/firstmate`) notifies only when
+  the turn's last reply is not exactly `Captain, shipshape.`.
+- Every other session notifies on each turn end and on permission prompts.
+
+A hook has no tty on stdout, so the script walks up the process tree to the
+first ancestor with a tty (Claude Code) and writes to that device. Checked on
+Linux with a pty; the Ghostty rendering and macOS `ttysNNN` devices are
+unverified until run on a Mac. Inside tmux the sequences do not reach Ghostty
+without passthrough. `agentPushNotifEnabled` is phone push, not the terminal
+beep, and is unchanged. Run `tests/notify-hook.test.sh` after changing the hook.
+
 ## Pi coding agent
 
 The [Pi coding agent](https://pi.dev) is declared as `pi-coding-agent` in `configuration.nix`'s Homebrew package list. `./bootstrap.sh` or `./rebuild.sh` installs it with the other managed CLI tools. Launch it in a project:
