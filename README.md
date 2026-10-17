@@ -243,6 +243,7 @@ If you don't use it, just remove it from `brews` in your copy.
   dotsync runs it for each commit; run it yourself to try an uncommitted change.
 - `work-overlays.sh` - applies the machine-local overlays described below on every switch.
 - `dotsync.sh`, `dotsync.nix`, `dotsync-hud.js`, `.githooks/` - keep every machine's clone in step with GitHub; see "Syncing machines".
+- `slot-sweep.sh`, `slot-sweep.nix` - on devbox, a daily systemd timer removes the git-ignored `target/`, `.build/`, `node_modules/` and `dist/` from idle `~/.treehouse` slots (none named by a `worktree=` line in `~/firstmate/state/*.meta`, none touched in 24 hours) and logs what it freed to the journal (`journalctl --user -u slot-sweep`). A weekly `nix.gc` in `home-linux.nix` drops store paths older than 7 days. Run `tests/slot-sweep.test.sh` after changing the script.
 - `home/` - the actual config files that get symlinked into place; the sections below explain the shared symlink model and Pi's narrower selective setup.
 
 ## How the symlinks work

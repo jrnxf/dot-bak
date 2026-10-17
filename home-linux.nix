@@ -2,6 +2,10 @@
 # everything shared, plus what Homebrew provides on the Mac.
 { config, pkgs, pkgsUnstable, ... }:
 
+let
+  slotSweep = import ./slot-sweep.nix { inherit pkgs; };
+in
+
 {
   imports = [ ./home.nix ];
 
@@ -20,6 +24,7 @@
     # render text with
     chromium
     dejavu_fonts
+    slotSweep
   ]) ++ (with pkgsUnstable; [
     # Homebrew follows the latest release of these on the Mac; the release
     # branch the rest of this config is pinned to lags too far behind for them.
@@ -46,5 +51,34 @@
       AccuracySec = "1s";
     };
     Install.WantedBy = [ "timers.target" ];
+  };
+
+  # Firstmate workers leave git-ignored build output (target/, node_modules/...)
+  # in idle treehouse slots; clear it once a day (slot-sweep.sh). The journal
+  # has what each run removed: journalctl --user -u slot-sweep.
+  systemd.user.services.slot-sweep = {
+    Unit.Description = "Clear build output from idle treehouse slots";
+    Service = {
+      Type = "oneshot";
+      ExecStart = "${config.home.profileDirectory}/bin/slot-sweep";
+    };
+  };
+  systemd.user.timers.slot-sweep = {
+    Unit.Description = "Clear idle treehouse slots daily";
+    Timer = {
+      OnCalendar = "daily";
+      Persistent = true;
+      RandomizedDelaySec = "1h";
+    };
+    Install.WantedBy = [ "timers.target" ];
+  };
+
+  # Weekly garbage collection of store paths older than 7 days, so old
+  # generations do not pile up. Home Manager needs the Nix package named here.
+  nix.package = pkgs.nix;
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 7d";
   };
 }
